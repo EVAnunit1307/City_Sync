@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DEFAULT_VOICE_ID = 'EST9Ui6982FZPSi7gCHi'; // GrowthSync planning copilot voice
+const DEFAULT_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'; // ElevenLabs "George" - free tier compatible
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,12 +33,12 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         text: text.trim(),
-        model_id: 'eleven_flash_v2',
+        model_id: 'eleven_flash_v2_5',
         voice_settings: {
-          stability: 0.6,
-          similarity_boost: 0.8,
-          style: 0.3,
-          use_speaker_boost: true,
+          stability: 0.85,
+          similarity_boost: 0.5,
+          style: 0.0,
+          use_speaker_boost: false,
         },
       }),
     });

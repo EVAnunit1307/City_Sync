@@ -1240,7 +1240,7 @@ export default function ThreeMap({
                     (STREET_THRESHOLD - STREET_FULL_VOL),
                 ),
               );
-            const vol = t * 0.4;
+            const vol = t * 0.12;
 
             if (!isStreetLevelRef.current) {
               isStreetLevelRef.current = true;

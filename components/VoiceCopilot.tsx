@@ -18,6 +18,8 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
   const [history, setHistory] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
   const [expanded, setExpanded] = useState(false);
   const processingRef = useRef(false);
+  const [subtitle, setSubtitle] = useState('');
+  const subtitleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // When transcript arrives and phase is 'processing', handle the command
   useEffect(() => {
@@ -32,24 +34,38 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
     if (onProcess) {
       onProcess(transcript).then((response) => {
         setHistory(prev => [...prev, { role: 'assistant', text: response }]);
+        setSubtitle(response);
         copilot.speak(response);
         processingRef.current = false;
       }).catch(() => {
         const fallback = 'I understood your request. Processing now.';
         setHistory(prev => [...prev, { role: 'assistant', text: fallback }]);
+        setSubtitle(fallback);
         copilot.speak(fallback);
         processingRef.current = false;
       });
     } else {
       const ack = `Got it: "${transcript}". Processing your request.`;
       setHistory(prev => [...prev, { role: 'assistant', text: ack }]);
+      setSubtitle(ack);
       copilot.speak(ack);
       processingRef.current = false;
     }
   }, [copilot.phase, copilot.transcript, onCommand, onProcess, copilot]);
 
+  // Clear subtitle after speaking ends
+  useEffect(() => {
+    if (copilot.phase === 'idle' && subtitle) {
+      subtitleTimerRef.current = setTimeout(() => setSubtitle(''), 3000);
+    }
+    return () => {
+      if (subtitleTimerRef.current) clearTimeout(subtitleTimerRef.current);
+    };
+  }, [copilot.phase, subtitle]);
+
   const handleMicClick = useCallback(() => {
     if (copilot.phase === 'idle' || copilot.phase === 'error') {
+      setSubtitle('');
       copilot.startListening();
     } else {
       copilot.stop();
@@ -88,7 +104,16 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
   const isActive = copilot.phase !== 'idle' && copilot.phase !== 'error';
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-3">
+      {/* Subtitle overlay */}
+      {subtitle && (copilot.phase === 'speaking' || copilot.phase === 'idle') && (
+        <div className="max-w-lg px-6 py-3 bg-black/75 backdrop-blur-md rounded-xl shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
+          <p className="text-white text-sm font-medium text-center leading-relaxed tracking-wide">
+            {subtitle}
+          </p>
+        </div>
+      )}
+
       {/* Chat History Panel */}
       {expanded && history.length > 0 && (
         <div className="w-80 max-h-64 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-2">
