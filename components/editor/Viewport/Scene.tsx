@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import * as THREE from 'three';
 
-const PLACEMENT_DEBUG = true; // temporary: sphere + "ground hit:" log
+const PLACEMENT_DEBUG = false; // set true to show sphere at last placement hit
 import { BuildingWrapper } from './BuildingWrapper';
 import { GoldEffects, GoldBurst } from './GoldParticles';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
@@ -322,8 +322,7 @@ function SceneContent({ sceneRef }: SceneContentProps) {
         return;
       }
       const pt = hit.point;
-      console.log('ground hit:', pt.x, pt.y, pt.z);
-      setDebugMarker(pt.clone());
+      if (PLACEMENT_DEBUG) setDebugMarker(pt.clone());
       if (!isEligible({ x: pt.x, z: pt.z })) {
         setPlacementMessage('Outside buildable area');
         return;
@@ -355,15 +354,30 @@ function SceneContent({ sceneRef }: SceneContentProps) {
 
   return (
     <>
-      {/* Even lighting from all directions for consistent illumination */}
-      <ambientLight intensity={0.8} />
-      <hemisphereLight args={[0xffffff, 0xffffff, 0.5]} />
+      <ambientLight intensity={0.65} />
+      <hemisphereLight args={[0xffffff, 0xe8ecf0, 0.5]} />
 
-      {/* Subtle fill lights from multiple angles for even coverage */}
-      <pointLight position={[50, 50, 50]} intensity={0.3} />
-      <pointLight position={[-50, 50, 50]} intensity={0.3} />
-      <pointLight position={[50, 50, -50]} intensity={0.3} />
-      <pointLight position={[-50, 50, -50]} intensity={0.3} />
+      {/* Soft shadows: one main directional light */}
+      <directionalLight
+        position={[40, 60, 40]}
+        intensity={0.7}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
+        shadow-camera-near={0.5}
+        shadow-camera-far={200}
+        shadow-bias={-0.0001}
+      />
+
+      {/* Fill lights for even coverage */}
+      <pointLight position={[50, 50, 50]} intensity={0.2} />
+      <pointLight position={[-50, 50, 50]} intensity={0.2} />
+      <pointLight position={[50, 50, -50]} intensity={0.2} />
+      <pointLight position={[-50, 50, -50]} intensity={0.2} />
 
       {/* Grid plane (placement uses mathematical plane intersection, not this mesh) */}
       <mesh
@@ -487,16 +501,18 @@ interface SceneProps {
 
 export function Scene({ sceneRef }: SceneProps) {
   return (
-    <div className="w-full h-full bg-sky-100">
+    <div className="w-full h-full bg-slate-100">
       <Canvas
-        camera={{ position: [30, 30, 30], fov: 50 }}
+        camera={{ position: [45, 38, 45], fov: 48 }}
         gl={{
           preserveDrawingBuffer: true,
           alpha: false,
-          toneMapping: THREE.NoToneMapping,  // Prevent darkening of textures
+          toneMapping: THREE.NoToneMapping,
+          antialias: true,
         }}
-        scene={{ background: new THREE.Color('#ffffff') }}
-        style={{ background: '#ffffff' }}
+        shadows
+        scene={{ background: new THREE.Color('#f1f5f9') }}
+        style={{ background: '#f1f5f9' }}
       >
         <SceneContent sceneRef={sceneRef} />
       </Canvas>

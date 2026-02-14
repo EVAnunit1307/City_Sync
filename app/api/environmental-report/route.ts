@@ -1,6 +1,18 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 import { getGeminiApiKey, isGeminiConfigured } from '@/lib/geminiEnv';
+import {
+  findProjectsNear,
+  getRoutes,
+  filterRoutesActiveOn,
+  matchRoutesByCorridor,
+  computeTransitAccessibilityScore,
+  classifyConstructionConstraint,
+  getCorridorsForSite,
+  dedupeByRouteId,
+  getMatchedCorridorNames,
+  DEFAULT_PROJECT_RADIUS_KM,
+} from '@/lib/impactReportData';
 
 interface PlacedBuilding {
   id: string;
@@ -16,22 +28,48 @@ interface EnvironmentalReport {
   summary: string;
   buildings: BuildingImpact[];
   overallImpact: OverallImpact;
+  transportationImpact: string;
+  transitImpact: string;
+  infrastructureStrain: string;
+  financialImpact: string;
+  relevantYorkRegionProjects: string[];
   recommendations: string[];
+  /** Optional 0–100 scores for Key Metrics cards (from Gemini) */
+  trafficScore?: number;
+  transitLoadScore?: number;
+  infrastructureIndex?: number;
+  financialScore?: number;
+}
+
+/** Serializable payload for report UI: nearby projects and routes (from CSVs). */
+export interface ImpactReportComputed {
+  transitAccessibilityScore: number;
+  constructionConstraint: { level: 'Low' | 'Medium' | 'High'; summary: string };
+  /** Corridor keywords that had at least one matching route (for UI). */
+  matchedCorridors: string[];
+  nearbyProjects: Array<{
+    projectName: string;
+    location: string;
+    projectSubtype: string;
+    status: string;
+    distanceKm: number;
+    webLink: string;
+  }>;
+  /** Top routes near site (max 8), active on report date, corridor-matched. */
+  nearbyRoutes: Array<{
+    routeShortName: string;
+    routeLongName: string;
+    scheduleStart: string;
+    scheduleEnd: string;
+  }>;
 }
 
 interface BuildingImpact {
   id: string;
   coordinates: { lat: number; lng: number };
   locationDescription: string;
-  environmentalImpact: {
-    carbonFootprint: string;
-    habitatDisruption: string;
-    waterImpact: string;
-    airQuality: string;
-  };
   societalImpact: {
     trafficIncrease: string;
-    noiseLevel: string;
     communityEffect: string;
     economicImpact: string;
   };
@@ -40,11 +78,9 @@ interface BuildingImpact {
 }
 
 interface OverallImpact {
-  environmentalScore: number; // 1-100
-  societalScore: number; // 1-100
+  environmentalScore: number;
+  societalScore: number;
   sustainabilityRating: string;
-  totalCarbonTonnes: number;
-  treesRequired: number;
 }
 
 interface MetricsSnapshot {
@@ -77,7 +113,6 @@ export async function POST(request: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Build rich details for Gemini: dimensions, zoning, type so it can estimate impacts
     const buildingDetails = buildings.map((b, i) => {
       const footprint = Math.round(b.scale.x * b.scale.z * 100);
       const heightM = Math.round(b.scale.y * 3);
@@ -100,88 +135,126 @@ Building ${i + 1}:
     const snapshotContext = snapshot
       ? `
 CURRENT METRICS SNAPSHOT (as of ${new Date(snapshot.timelineDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}):
-- Active construction sites at this date: ${snapshot.activeCount}
-- CO2 emissions (tonnes/PA): ${snapshot.co2Emissions.toFixed(1)}
-- Energy consumption (MWh/PA): ${snapshot.energyConsumption.toFixed(1)}
-- Water usage (m³/PA): ${snapshot.waterUsage.toFixed(0)}
+- Active construction sites: ${snapshot.activeCount}
 - Total footprint (sq m): ${snapshot.totalFootprint.toFixed(0)}
 - Material complexity: ${snapshot.materialComplexity}
-- Sustainability score: ${snapshot.sustainabilityScore}/100
-- Population happiness (noise impact): ${snapshot.populationHappiness}/100
-- Average construction noise: ~${snapshot.avgDb} dB
 
-Use these snapshot values to align your overall impact numbers and summary with the current timeline state. Reference "as of [this date]" where relevant.
+Use this to align your impact narrative with the current timeline state where relevant.
 `
       : '';
 
-    const prompt = `You are an environmental and urban planning expert analyzing proposed building developments in Markham, Ontario, Canada (York Region) (coordinates 43.8561°N, 79.3370°W).
+    // Site centroid for project/route matching
+    const centroidLat = buildings.reduce((s, b) => s + b.lat, 0) / buildings.length;
+    const centroidLng = buildings.reduce((s, b) => s + b.lng, 0) / buildings.length;
+    const reportDate = snapshot?.timelineDate ? new Date(snapshot.timelineDate) : new Date();
 
-PROPOSED BUILDINGS FOR ANALYSIS (use dimensions, zoning, and type to estimate impacts):
+    const nearbyProjects = findProjectsNear(centroidLat, centroidLng, DEFAULT_PROJECT_RADIUS_KM);
+    const topProjects = nearbyProjects.slice(0, 5);
+    const constructionConstraint = classifyConstructionConstraint(nearbyProjects);
+
+    const corridorsForSite = getCorridorsForSite(centroidLat, centroidLng);
+    const allRoutes = getRoutes();
+    const activeRoutes = filterRoutesActiveOn(allRoutes, reportDate);
+    const dedupedRoutes = dedupeByRouteId(activeRoutes);
+    const matchedRoutes = matchRoutesByCorridor(dedupedRoutes, corridorsForSite);
+    const matchedCorridors = getMatchedCorridorNames(matchedRoutes, corridorsForSite);
+    const transitAccessibilityScore = computeTransitAccessibilityScore(matchedRoutes);
+
+    const nearbyProjectsList = topProjects
+      .map(
+        (p) =>
+          `- ${p.projectName || p.location || 'Unnamed'} | ${p.projectSubtype} | ${p.status} | ${(p.distanceKm ?? 0).toFixed(2)} km${p.webLink ? ` | ${p.webLink}` : ''}`
+      )
+      .join('\n');
+    const nearbyRoutesList = matchedRoutes
+      .map((r) => `- ${r.routeLongName || r.routeShortName} (${r.scheduleStart} to ${r.scheduleEnd})`)
+      .join('\n');
+
+    const computed: ImpactReportComputed = {
+      transitAccessibilityScore,
+      constructionConstraint,
+      matchedCorridors,
+      nearbyProjects: topProjects.map((p) => ({
+        projectName: p.projectName || p.location || 'Unnamed',
+        location: p.location,
+        projectSubtype: p.projectSubtype,
+        status: p.status,
+        distanceKm: p.distanceKm ?? 0,
+        webLink: p.webLink || '',
+      })),
+      nearbyRoutes: matchedRoutes.map((r) => ({
+        routeShortName: r.routeShortName,
+        routeLongName: r.routeLongName,
+        scheduleStart: r.scheduleStart,
+        scheduleEnd: r.scheduleEnd,
+      })),
+    };
+
+    const allowedProjectNames = topProjects.map((p) => p.projectName || p.location || 'Unnamed').filter(Boolean);
+
+    const prompt = `You are an urban planning expert analyzing proposed building developments in Markham, Ontario, Canada (York Region).
+
+PROPOSED BUILDINGS FOR ANALYSIS:
 ${buildingDetails}
 ${snapshotContext}
 
-ESTIMATION INSTRUCTIONS:
-- Estimate construction and operational CO2, energy use, water use, and material intensity for each building using:
-  - Footprint (sq m) and height to infer scale and embodied carbon (concrete, steel, glass).
-  - Zoning code (e.g. MU1, R1, C1) to infer use type (mixed-use, residential, commercial) and typical energy/water intensity.
-  - Building type (custom vs default) to inform complexity and material choices.
-- Typical ranges: construction 0.3–0.8 tonnes CO2/sq m; operational 15–40 kWh/sq m/year for commercial, 80–120 for residential; water 5–15 L/sq m/day. Scale with height and footprint.
-- Your overallImpact.totalCarbonTonnes and treesRequired should be numerical estimates consistent with the building dimensions and zoning. Prefer your own estimates over the snapshot when the snapshot is from a simple calculator.
+COMPUTED IMPACT METRICS (use these numbers in your narrative; do not invent others):
+- Transit Accessibility Score (0–100): ${transitAccessibilityScore}
+- Construction Constraint: ${constructionConstraint.level} — ${constructionConstraint.summary}
+- Nearby York Region infrastructure/construction projects (from official data; you may ONLY reference these):
+${nearbyProjectsList}
+- Nearby YRT bus routes (active on report date; use for transit narrative):
+${nearbyRoutesList}
 
-LOCATION CONTEXT:
-- Area: Markham, Ontario, Canada (York Region) - Study area for suburban growth and urban planning
-- Nearby landmarks: Queen's University campus, Lake Ontario waterfront
-- Climate: Humid continental (Dfb), cold winters, warm summers
-- Ecological zone: Great Lakes-St. Lawrence mixed forest region
-- Notable wildlife: Migratory birds, urban wildlife corridors
+INSTRUCTIONS:
+- Focus on: traffic/congestion (transportation impact), transit/route load (transit impact), infrastructure strain (composite: water, sewer, roads), and financial impact (municipal servicing, development charges).
+- For each building provide: locationDescription (brief), societalImpact with trafficIncrease, communityEffect, economicImpact only. No carbon, habitat, water, air quality, or noise sections.
+- In relevantYorkRegionProjects list ONLY project names from the "Nearby York Region infrastructure/construction projects" list above. Do NOT invent or add any other projects.
+- Write "Transit Accessibility" narrative grounded in the transit score (${transitAccessibilityScore}) and the listed routes. Write "Nearby Infrastructure/Construction Projects" narrative grounded only in the listed projects.
+- Keep summary short (2-3 sentences). Recommendations should be short and actionable.
+- Provide numeric scores (0–100) for: trafficScore (traffic/congestion), transitLoadScore (transit demand), infrastructureIndex (infrastructure strain), financialScore (financial impact).
 
-Analyze each building and provide a comprehensive environmental and societal impact assessment. Base carbon, energy, water, and material estimates on the dimensions, zoning, and building type above.
-
-You MUST respond with valid JSON in this exact format:
+You MUST respond with valid JSON in this exact format (no other fields):
 {
-  "summary": "2-3 sentence overview of the overall development impact",
+  "summary": "2-3 sentence executive summary of overall development impact",
   "buildings": [
     {
       "id": "building-id",
       "coordinates": { "lat": 43.856, "lng": -79.263 },
-      "locationDescription": "Brief description of the specific location and what currently exists there",
-      "environmentalImpact": {
-        "carbonFootprint": "Estimated construction and operational carbon impact",
-        "habitatDisruption": "Impact on local flora, fauna, and ecosystems",
-        "waterImpact": "Effects on drainage, groundwater, Lake Ontario",
-        "airQuality": "Construction and long-term air quality effects"
-      },
+      "locationDescription": "Brief description of the specific location",
       "societalImpact": {
         "trafficIncrease": "Expected traffic and congestion changes",
-        "noiseLevel": "Noise pollution during and after construction",
-        "communityEffect": "Impact on nearby residents, students, businesses",
-        "economicImpact": "Jobs, property values, local economy effects"
+        "communityEffect": "Impact on nearby residents and businesses",
+        "economicImpact": "Jobs, property values, local economy"
       },
       "riskLevel": "low|medium|high",
-      "mitigationMeasures": ["Specific actionable mitigation measure 1", "Measure 2"]
+      "mitigationMeasures": ["Actionable measure 1", "Measure 2"]
     }
   ],
   "overallImpact": {
     "environmentalScore": 75,
     "societalScore": 68,
-    "sustainabilityRating": "B+ (Good with room for improvement)",
-    "totalCarbonTonnes": 2500,
-    "treesRequired": 150
+    "sustainabilityRating": "B+ (Good with room for improvement)"
   },
-  "recommendations": [
-    "Strategic recommendation 1",
-    "Recommendation 2",
-    "Recommendation 3"
-  ]
+  "trafficScore": 70,
+  "transitLoadScore": 65,
+  "infrastructureIndex": 60,
+  "financialScore": 72,
+  "transportationImpact": "1-2 paragraphs on congestion and road capacity, tied to the development scale and location.",
+  "transitImpact": "1-2 paragraphs on transit/route load and transit accessibility, using the provided score and route list.",
+  "infrastructureStrain": "1-2 paragraphs on composite infrastructure strain (water, sewer, roads).",
+  "financialImpact": "1 short paragraph on municipal servicing and development charge (DC) estimate.",
+  "relevantYorkRegionProjects": ["Only use names from the nearby projects list above"],
+  "recommendations": ["Short actionable recommendation 1", "Recommendation 2", "Recommendation 3"]
 }
 
-SCORING GUIDELINES:
-- environmentalScore: 100 = no impact, 0 = devastating impact
-- societalScore: 100 = highly beneficial, 0 = highly detrimental
-- totalCarbonTonnes: Estimate from footprint, height, and zoning (construction + 10-year operational). Typical: 0.3–0.8 t CO2/sq m construction; 0.02–0.05 t/sq m/year operational.
-- treesRequired: Offset totalCarbonTonnes (avg tree ~20 kg CO2/year; use for 10–20 year offset)
+SCORING:
+- environmentalScore: 100 = no impact, 0 = devastating (based on infrastructure/land use only).
+- societalScore: 100 = highly beneficial, 0 = highly detrimental.
+- sustainabilityRating: letter grade plus short label.
+- trafficScore, transitLoadScore, infrastructureIndex, financialScore: 0–100 each.
 
-Be specific about the Markham, Ontario (York Region) context. Reference real features of the area when relevant (downtown Markham, Unionville, local parks, transit, growth corridors).
+Be specific about Markham, Ontario (York Region). Reference the supplied project and route lists only; do not invent projects or routes.
 
 Respond ONLY with the JSON object, no additional text.`;
 
@@ -213,6 +286,16 @@ Respond ONLY with the JSON object, no additional text.`;
     try {
       const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       report = JSON.parse(cleanedText);
+      if (!Array.isArray(report.relevantYorkRegionProjects)) {
+        report.relevantYorkRegionProjects = [];
+      }
+      report.relevantYorkRegionProjects = report.relevantYorkRegionProjects.filter((name) =>
+        allowedProjectNames.includes(name)
+      );
+      if (!report.transportationImpact) report.transportationImpact = '';
+      if (!report.transitImpact) report.transitImpact = '';
+      if (!report.infrastructureStrain) report.infrastructureStrain = '';
+      if (!report.financialImpact) report.financialImpact = '';
     } catch {
       console.error('Failed to parse Gemini response:', text);
       return NextResponse.json({
@@ -223,6 +306,7 @@ Respond ONLY with the JSON object, no additional text.`;
 
     return NextResponse.json({
       report,
+      computed,
       generatedAt: new Date().toISOString(),
       buildingCount: buildings.length,
       snapshotDate: snapshot?.timelineDate ?? null,

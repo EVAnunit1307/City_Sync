@@ -201,7 +201,7 @@ export function VoiceDesign() {
   })();
 
   return (
-    <div className="fixed bottom-40 right-17 z-50 flex flex-col items-end gap-2">
+    <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
       {/* Popover: Last Voice Command details */}
       {lastResult && showDetails && (
         <div className="w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">

@@ -1,0 +1,398 @@
+/**
+ * Impact Report data: parse York Region projects and YRT bus routes from CSVs.
+ * Projects X,Y are assumed to be NAD83 UTM Zone 17N (EPSG:26917) — Ontario standard for ArcGIS.
+ * Converted to WGS84 (lat/lng) for distance matching with map.
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import proj4 from 'proj4';
+
+// NAD83 UTM Zone 17N (Ontario) — typical for York Region ArcGIS exports
+const NAD83_UTM17 = '+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs';
+const WGS84 = 'EPSG:4326';
+
+let projectsCache: Project[] | null = null;
+let routesCache: Route[] | null = null;
+
+export interface Project {
+  objectId: number;
+  projectName: string;
+  location: string;
+  webLink: string;
+  projectType: string;
+  projectCategory: string;
+  projectSubtype: string;
+  status: string;
+  /** WGS84 */
+  lat: number;
+  lng: number;
+  /** Distance from site (set by matching logic) */
+  distanceKm?: number;
+}
+
+export interface Route {
+  objectId: number;
+  routeId: number;
+  routeShortName: string;
+  routeLongName: string;
+  scheduleStart: string;
+  scheduleEnd: string;
+  shapeLength: number;
+}
+
+/**
+ * Convert project X,Y (NAD83 UTM 17N meters) to WGS84 [lng, lat].
+ * CRS: EPSG:26917 (NAD83 / UTM zone 17N) — document if your export uses something else.
+ */
+export function projectXYToLngLat(x: number, y: number): [number, number] {
+  const [lng, lat] = proj4(NAD83_UTM17, WGS84, [x, y]);
+  return [lng, lat];
+}
+
+/**
+ * Parse the York Region projects CSV (ArcGIS export style).
+ * Columns: X,Y,OBJECTID,PROJECTNAME,LOCATION,WEBLINK,PROJECTTYPE,PROJECTCATEGORY,PROJECTSUBTYPE,STATUS
+ */
+export function parseProjectsCSV(csvContent: string): Project[] {
+  const lines = csvContent.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  const header = lines[0].split(',').map((h) => h.trim());
+  const xIdx = header.indexOf('X');
+  const yIdx = header.indexOf('Y');
+  const idIdx = header.indexOf('OBJECTID');
+  const nameIdx = header.indexOf('PROJECTNAME');
+  const locIdx = header.indexOf('LOCATION');
+  const linkIdx = header.indexOf('WEBLINK');
+  const typeIdx = header.indexOf('PROJECTTYPE');
+  const catIdx = header.indexOf('PROJECTCATEGORY');
+  const subIdx = header.indexOf('PROJECTSUBTYPE');
+  const statusIdx = header.indexOf('STATUS');
+
+  const projects: Project[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = parseCSVLine(line);
+    if (parts.length < header.length) continue;
+
+    const get = (idx: number) => (idx >= 0 ? (parts[idx] ?? '').trim() : '');
+    const x = parseFloat(get(xIdx));
+    const y = parseFloat(get(yIdx));
+    if (Number.isNaN(x) || Number.isNaN(y)) continue;
+
+    const [lng, lat] = projectXYToLngLat(x, y);
+
+    projects.push({
+      objectId: parseInt(get(idIdx), 10) || i,
+      projectName: get(nameIdx),
+      location: get(locIdx),
+      webLink: get(linkIdx),
+      projectType: get(typeIdx),
+      projectCategory: get(catIdx),
+      projectSubtype: get(subIdx),
+      status: get(statusIdx),
+      lat,
+      lng,
+    });
+  }
+
+  return projects;
+}
+
+/**
+ * Parse the bus routes CSV (GTFS-style).
+ * Columns: OBJECTID,ROUTE_ID,ROUTE_SHORT_NAME,ROUTE_LONG_NAME,SCHEDULE_START,SCHEDULE_END,SHAPE_Length
+ */
+export function parseRoutesCSV(csvContent: string): Route[] {
+  const lines = csvContent.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  const header = lines[0].split(',').map((h) => h.trim());
+  const idIdx = header.indexOf('OBJECTID');
+  const routeIdIdx = header.indexOf('ROUTE_ID');
+  const shortIdx = header.indexOf('ROUTE_SHORT_NAME');
+  const longIdx = header.indexOf('ROUTE_LONG_NAME');
+  const startIdx = header.indexOf('SCHEDULE_START');
+  const endIdx = header.indexOf('SCHEDULE_END');
+  const lengthIdx = header.indexOf('SHAPE_Length');
+
+  const routes: Route[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const parts = parseCSVLine(lines[i]);
+    if (parts.length < 5) continue;
+
+    const get = (idx: number) => (idx >= 0 ? (parts[idx] ?? '').trim() : '');
+
+    routes.push({
+      objectId: parseInt(get(idIdx), 10) || i,
+      routeId: parseInt(get(routeIdIdx), 10) || i,
+      routeShortName: get(shortIdx),
+      routeLongName: get(longIdx),
+      scheduleStart: get(startIdx),
+      scheduleEnd: get(endIdx),
+      shapeLength: parseFloat(get(lengthIdx)) || 0,
+    });
+  }
+
+  return routes;
+}
+
+function parseCSVLine(line: string): string[] {
+  const out: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if ((c === ',' && !inQuotes) || c === '\n') {
+      out.push(current);
+      current = '';
+    } else {
+      current += c;
+    }
+  }
+  out.push(current);
+  return out;
+}
+
+const DATA_DIR = path.join(process.cwd(), 'data');
+
+function readProjectsFromDisk(): Project[] {
+  const filePath = path.join(DATA_DIR, 'Transportation_Active_Construction_Point.csv');
+  const content = fs.readFileSync(filePath, 'utf-8');
+  return parseProjectsCSV(content);
+}
+
+function readRoutesFromDisk(): Route[] {
+  const filePath = path.join(DATA_DIR, 'Bus_Routes_from_GTFS.csv');
+  const content = fs.readFileSync(filePath, 'utf-8');
+  return parseRoutesCSV(content);
+}
+
+/**
+ * Get projects (cached). Call from API route only (server-side).
+ */
+export function getProjects(): Project[] {
+  if (projectsCache === null) {
+    try {
+      projectsCache = readProjectsFromDisk();
+    } catch (e) {
+      console.error('Failed to load projects CSV:', e);
+      projectsCache = [];
+    }
+  }
+  return projectsCache;
+}
+
+/**
+ * Get routes (cached). Call from API route only (server-side).
+ */
+export function getRoutes(): Route[] {
+  if (routesCache === null) {
+    try {
+      routesCache = readRoutesFromDisk();
+    } catch (e) {
+      console.error('Failed to load routes CSV:', e);
+      routesCache = [];
+    }
+  }
+  return routesCache;
+}
+
+/**
+ * Haversine distance in km between two WGS84 points.
+ */
+export function haversineKm(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/** Default radius (km) for "nearby" projects */
+export const DEFAULT_PROJECT_RADIUS_KM = 2;
+
+/**
+ * Find projects within radius of a site (lat/lng). Attach distanceKm to each.
+ */
+export function findProjectsNear(
+  siteLat: number,
+  siteLng: number,
+  radiusKm: number = DEFAULT_PROJECT_RADIUS_KM
+): Project[] {
+  const projects = getProjects();
+  const withDist = projects.map((p) => ({
+    ...p,
+    distanceKm: haversineKm(siteLat, siteLng, p.lat, p.lng),
+  }));
+  const nearby = withDist.filter((p) => p.distanceKm <= radiusKm);
+  nearby.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+  return nearby;
+}
+
+/** Max number of routes to show in Transit Accessibility (cap). */
+export const TRANSIT_ROUTES_CAP = 8;
+
+/**
+ * Strict corridor list for Markham / York Region. Only routes whose ROUTE_LONG_NAME
+ * contains one of these (case-insensitive) are considered "nearby". Used when no
+ * road network geometry is available.
+ */
+export const MARKHAM_CORRIDORS = [
+  'HIGHWAY 7',
+  'MAJOR MACKENZIE',
+  'KENNEDY',
+  'MCCOWAN',
+  'WARDEN',
+  '16TH AVENUE',
+  'NINTH LINE',
+  '14TH AVENUE',
+] as const;
+
+/** Legacy export for callers that still reference KEY_CORRIDORS; prefer getCorridorsForSite. */
+export const KEY_CORRIDORS = [...MARKHAM_CORRIDORS];
+
+/**
+ * Return corridor keywords used for route matching at this site.
+ * For now uses Markham preset only. Can be extended with nearest-road names or user selection.
+ */
+export function getCorridorsForSite(_lat: number, _lng: number): string[] {
+  return [...MARKHAM_CORRIDORS];
+}
+
+/**
+ * De-duplicate routes by ROUTE_ID (keep first occurrence). Removes duplicate entries.
+ */
+export function dedupeByRouteId(routes: Route[]): Route[] {
+  const seen = new Set<number>();
+  return routes.filter((r) => {
+    if (seen.has(r.routeId)) return false;
+    seen.add(r.routeId);
+    return true;
+  });
+}
+
+/**
+ * Parse schedule date string (e.g. "2025/01/05 00:00:00+00") to Date.
+ */
+export function parseScheduleDate(s: string): Date | null {
+  if (!s) return null;
+  const d = new Date(s.replace(' ', 'T'));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Filter to ACTIVE routes only: current date must be within [SCHEDULE_START, SCHEDULE_END].
+ * Routes with missing or unparseable dates are excluded.
+ */
+export function filterRoutesActiveOn(routes: Route[], date: Date): Route[] {
+  return routes.filter((r) => {
+    const start = parseScheduleDate(r.scheduleStart);
+    const end = parseScheduleDate(r.scheduleEnd);
+    if (!start || !end) return false;
+    const t = date.getTime();
+    return t >= start.getTime() && t <= end.getTime();
+  });
+}
+
+/**
+ * Match routes by corridor keywords: include only if ROUTE_LONG_NAME contains one of the
+ * keywords (case-insensitive). Strict: if keywords is empty, returns [].
+ * Capped at TRANSIT_ROUTES_CAP (8).
+ */
+export function matchRoutesByCorridor(routes: Route[], keywords: string[]): Route[] {
+  if (!keywords || keywords.length === 0) return [];
+  const upper = keywords.map((k) => k.toUpperCase());
+  const matched = routes.filter((r) => {
+    const name = (r.routeLongName || r.routeShortName || '').toUpperCase();
+    return upper.some((k) => name.includes(k));
+  });
+  return matched.slice(0, TRANSIT_ROUTES_CAP);
+}
+
+/**
+ * Return the list of corridor keywords that actually matched at least one route
+ * (for UI: "Matched corridors: X, Y").
+ */
+export function getMatchedCorridorNames(
+  matchedRoutes: Route[],
+  corridorKeywords: string[]
+): string[] {
+  const upper = corridorKeywords.map((k) => k.toUpperCase());
+  const matched = new Set<string>();
+  for (const r of matchedRoutes) {
+    const name = (r.routeLongName || r.routeShortName || '').toUpperCase();
+    for (const k of upper) {
+      if (name.includes(k)) matched.add(k);
+    }
+  }
+  return [...matched];
+}
+
+/**
+ * Transit Accessibility Score 0–100 based only on matched ACTIVE routes (after filtering):
+ * - Base: count of matched routes (capped contribution)
+ * - Bonus if any matched route is VIVA
+ * - Bonus if any matched route includes HIGHWAY 7 or MAJOR MACKENZIE (arterials)
+ * Does not use total CSV route count.
+ */
+export function computeTransitAccessibilityScore(matchedRoutes: Route[]): number {
+  let score = 0;
+  score += Math.min(matchedRoutes.length * 8, 55);
+  const nameUpper = (r: Route) => (r.routeLongName || r.routeShortName || '').toUpperCase();
+  const hasViva = matchedRoutes.some((r) => nameUpper(r).includes('VIVA'));
+  const hasArterial = matchedRoutes.some(
+    (r) => nameUpper(r).includes('HIGHWAY 7') || nameUpper(r).includes('MAJOR MACKENZIE')
+  );
+  if (hasViva) score += 20;
+  if (hasArterial) score += 15;
+  return Math.min(100, Math.round(score));
+}
+
+export type ConstructionConstraintLevel = 'Low' | 'Medium' | 'High';
+
+/**
+ * Classify construction constraint from nearby project count and proximity.
+ */
+export function classifyConstructionConstraint(
+  nearbyProjects: Project[],
+  topDistanceKm?: number
+): { level: ConstructionConstraintLevel; summary: string } {
+  const n = nearbyProjects.length;
+  const closest = nearbyProjects[0]?.distanceKm ?? 999;
+  const avgDist = n
+    ? nearbyProjects.reduce((s, p) => s + (p.distanceKm ?? 0), 0) / n
+    : 999;
+
+  if (n === 0) return { level: 'Low', summary: 'No active construction projects within range.' };
+  if (n >= 5 || closest < 0.5)
+    return {
+      level: 'High',
+      summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Significant construction constraint.`,
+    };
+  if (n >= 2 || closest < 1)
+    return {
+      level: 'Medium',
+      summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Moderate construction constraint.`,
+    };
+  return {
+    level: 'Low',
+    summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Low construction constraint.`,
+  };
+}
