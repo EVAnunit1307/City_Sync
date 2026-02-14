@@ -74,6 +74,13 @@ import {
   getConstructionSourceDb,
 } from "@/lib/constructionNoise";
 import { loadAndRenderZoningLayer } from "@/lib/zoningRenderer";
+import {
+  getGroundHitFromPlane,
+  isEligible,
+  validatePlacement,
+  getRoadBoxesFromScene,
+  DEFAULT_MAP_FOOTPRINT,
+} from "@/lib/placement/placementPipeline";
 
 interface PlacedBuilding {
   id: string;
@@ -104,6 +111,10 @@ interface ThreeMapProps {
       ghostRotationY?: number; // Current rotation of ghost preview
     } | null,
   ) => void;
+  /** Called when placement is invalid (e.g. click not on ground). Use for toast. */
+  onPlacementInvalid?: (message: string) => void;
+  /** When true, show debug sphere at placement point and log hit/rejection. */
+  debugPlacement?: boolean;
   placedBuildings?: PlacedBuilding[];
   isPlacementMode?: boolean;
   buildingScale?: { x: number; y: number; z: number };
@@ -416,6 +427,8 @@ export default function ThreeMap({
   initialCenter = [-79.2633, 43.8561], // Markham, Ontario
   className = "w-full h-full",
   onCoordinateClick,
+  onPlacementInvalid,
+  debugPlacement = false,
   placedBuildings = [],
   isPlacementMode = false,
   buildingScale = { x: 10, y: 10, z: 10 },
@@ -461,6 +474,9 @@ export default function ThreeMap({
     string | null
   >(null);
   const [ghostRotationY, setGhostRotationY] = useState(0); // Rotation for ghost preview
+  const [debugPlacementMarker, setDebugPlacementMarker] =
+    useState<THREE.Vector3 | null>(null);
+  const debugPlacementSphereRef = useRef<THREE.Mesh | null>(null);
   const noiseRippleGroupRef = useRef<THREE.Group | null>(null);
   const rippleTimeRef = useRef(0);
   const zoningGroupRef = useRef<THREE.Group | null>(null);
@@ -1545,52 +1561,81 @@ export default function ThreeMap({
         }
       }
 
-      // For placement mode, check for building collisions first
-      if (isPlacementMode && buildingIntersects.length > 0) {
-        // Prevent placing a building on top of another building
-        console.warn("Cannot place building on top of another building");
+      // Placement mode: ground hit via mathematical plane, then bounds eligibility
+      if (isPlacementMode) {
+        const pointResult = getGroundHitFromPlane(
+          raycasterRef.current,
+          mouse,
+          cameraRef.current
+        );
+        if (!pointResult.ok) {
+          if (onPlacementInvalid) onPlacementInvalid(pointResult.reason);
+          else console.warn(pointResult.reason);
+          return;
+        }
+        const worldPoint = pointResult.point.clone();
+        if (!isEligible({ x: worldPoint.x, z: worldPoint.z })) {
+          if (onPlacementInvalid) onPlacementInvalid("Outside buildable area");
+          return;
+        }
+        if (debugPlacement) {
+          console.log("ground hit:", worldPoint.x, worldPoint.y, worldPoint.z);
+          setDebugPlacementMarker(worldPoint.clone());
+        }
+        const roadBoxes = getRoadBoxesFromScene(sceneRef.current, 2);
+        const existing = placedBuildings.map((b) => ({
+          x: b.position.x,
+          z: b.position.z,
+          radius: Math.max(b.scale?.x ?? 1, b.scale?.z ?? 1) * 6,
+        }));
+        const validation = validatePlacement(
+          { x: worldPoint.x, y: worldPoint.y, z: worldPoint.z },
+          DEFAULT_MAP_FOOTPRINT,
+          "detached",
+          { parcels: [], roadBoxes, existing }
+        );
+        if (!validation.ok) {
+          if (onPlacementInvalid)
+            onPlacementInvalid(validation.reason ?? "Invalid placement");
+          else console.warn(validation.reason);
+          return;
+        }
+        const [lng, lat] = CityProjection.unprojectFromWorld(worldPoint);
+        const coordinate = {
+          lat,
+          lng,
+          worldX: worldPoint.x,
+          worldY: worldPoint.y,
+          worldZ: worldPoint.z,
+          ghostRotationY,
+        };
+        if (onCoordinateClick) onCoordinateClick(coordinate);
         return;
       }
 
-      // For placement mode, only raycast against ground and static geometry
-      // For normal mode, raycast against everything
-      let intersects;
-      if (isPlacementMode) {
-        const targetObjects = [
-          ...groupsRef.current.environment.children,
-          ...groupsRef.current.staticGeometry.children,
-        ];
-        intersects = raycasterRef.current.intersectObjects(targetObjects, true);
-      } else {
-        intersects = raycasterRef.current.intersectObjects(
-          sceneRef.current.children,
-          true,
-        );
-      }
+      // Normal mode: raycast against everything for coordinate / selection
+      const intersects = raycasterRef.current.intersectObjects(
+        sceneRef.current.children,
+        true,
+      );
 
       if (intersects.length > 0) {
-        // Get the first intersection point
         const intersectionPoint = intersects[0].point;
-
-        // Convert world coordinates to lat/lng
         const [lng, lat] = CityProjection.unprojectFromWorld(intersectionPoint);
-
-        // Call the callback with the clicked coordinate
         const coordinate = {
           lat,
           lng,
           worldX: intersectionPoint.x,
           worldY: intersectionPoint.y,
           worldZ: intersectionPoint.z,
-          ghostRotationY: isPlacementMode ? ghostRotationY : undefined,
+          ghostRotationY: undefined,
         };
 
         if (onCoordinateClick) {
           onCoordinateClick(coordinate);
         }
 
-        // Deselect buildings if clicking elsewhere
-        if (onBuildingSelect && !isPlacementMode) {
+        if (onBuildingSelect) {
           onBuildingSelect(null);
         }
         setSelectedOsmBuildingId(null);
@@ -1608,7 +1653,39 @@ export default function ThreeMap({
       canvas.addEventListener("click", handleCanvasClick);
       return () => canvas.removeEventListener("click", handleCanvasClick);
     }
-  }, [onCoordinateClick, onBuildingSelect, isPlacementMode, ghostRotationY]);
+  }, [onCoordinateClick, onBuildingSelect, onPlacementInvalid, isPlacementMode, ghostRotationY, debugPlacement, placedBuildings]);
+
+  // Debug placement sphere (when debugPlacement is on and we have a marker)
+  useEffect(() => {
+    if (!sceneRef.current || !groupsRef.current) return;
+    const env = groupsRef.current.environment;
+    if (!debugPlacement || !debugPlacementMarker) {
+      const mesh = debugPlacementSphereRef.current;
+      if (mesh && mesh.parent) {
+        mesh.parent.remove(mesh);
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
+        debugPlacementSphereRef.current = null;
+      }
+      return;
+    }
+    let mesh = debugPlacementSphereRef.current;
+    if (!mesh) {
+      mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(2, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.8 })
+      );
+      mesh.name = "debug-placement-sphere";
+      debugPlacementSphereRef.current = mesh;
+    }
+    mesh.position.copy(debugPlacementMarker);
+    if (!mesh.parent) env.add(mesh);
+  }, [debugPlacement, debugPlacementMarker, isReady]);
+
+  // Clear placement debug marker when leaving placement mode
+  useEffect(() => {
+    if (!isPlacementMode) setDebugPlacementMarker(null);
+  }, [isPlacementMode]);
 
   // Refresh car details panel periodically when a car is selected (live speed/behavior)
   useEffect(() => {

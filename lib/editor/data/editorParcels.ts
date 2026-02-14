@@ -16,10 +16,10 @@ export const DEFAULT_EDITOR_PARCELS: Parcel[] = [
   },
 ];
 
-/** Road width in meters (same as rendered). Exclusion = width/2 + roadBuffer (e.g. 4 + 2 = 6m from centerline). */
+/** Road width in meters (used when creating road meshes). */
 export const EDITOR_ROAD_WIDTH = 8;
 
-/** Road segments in editor world coords. Same data is used for validation AND rendering (single source of truth). */
+/** Road segments in editor world coords. Used only to create the road meshes in the scene. Placement validation uses the rendered meshes (getRoadBoxesFromScene), not this array. */
 export const DEFAULT_EDITOR_ROADS: Road[] = [
   {
     id: 'road-h1',

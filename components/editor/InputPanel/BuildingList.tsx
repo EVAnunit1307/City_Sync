@@ -30,7 +30,15 @@ function normalizeMix(mix: BatchMix, changedKey: keyof BatchMix, newValue: numbe
   return next;
 }
 
-export function BuildingList() {
+export interface BuildingListProps {
+  /** When provided, batch config is controlled by parent (e.g. sidebar with separate Batch Settings accordion). */
+  batchConfig?: BatchConfig;
+  setBatchConfig?: React.Dispatch<React.SetStateAction<BatchConfig>>;
+  /** When true, hide the inline batch sliders (use Batch Settings accordion instead). */
+  hideBatchSliders?: boolean;
+}
+
+export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: setBatchConfigProp, hideBatchSliders }: BuildingListProps = {}) {
   const {
     buildings,
     selectedBuildingId,
@@ -48,7 +56,9 @@ export function BuildingList() {
     setBatchPlacementConfig,
   } = useBuildings();
 
-  const [batchConfig, setBatchConfig] = useState<BatchConfig>(() => ({ ...DEFAULT_BATCH_CONFIG }));
+  const [internalBatchConfig, setInternalBatchConfig] = useState<BatchConfig>(() => ({ ...DEFAULT_BATCH_CONFIG }));
+  const batchConfig = batchConfigProp ?? internalBatchConfig;
+  const setBatchConfig = setBatchConfigProp ?? setInternalBatchConfig;
 
   const handleAddBuilding = () => {
     setPlacementMode(true);
@@ -117,99 +127,100 @@ export function BuildingList() {
         </div>
       </div>
 
-      {/* Batch Placement controls */}
-      <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-lg space-y-3">
-        <h4 className="text-sm font-semibold text-emerald-900">Batch Placement</h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs text-emerald-800">Total Buildings</label>
-            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.totalBuildings}</span>
-          </div>
-          <input
-            type="range"
-            min={5}
-            max={100}
-            step={1}
-            value={batchConfig.totalBuildings}
-            onChange={(e) => setBatchConfig((c) => ({ ...c, totalBuildings: parseInt(e.target.value, 10) }))}
-            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs text-emerald-800">Spacing (m)</label>
-            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.spacing}</span>
-          </div>
-          <input
-            type="range"
-            min={4}
-            max={20}
-            step={1}
-            value={batchConfig.spacing}
-            onChange={(e) => setBatchConfig((c) => ({ ...c, spacing: parseInt(e.target.value, 10) }))}
-            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs text-emerald-800">Footprint (compact ↔ spread)</label>
-            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.footprintScale.toFixed(1)}</span>
-          </div>
-          <input
-            type="range"
-            min={0.6}
-            max={2}
-            step={0.1}
-            value={batchConfig.footprintScale}
-            onChange={(e) => setBatchConfig((c) => ({ ...c, footprintScale: parseFloat(e.target.value) }))}
-            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
-          />
-        </div>
-        <div className="pt-1 border-t border-emerald-200/80">
-          <p className="text-xs text-emerald-800 font-medium mb-2">Housing mix (sum = 100%)</p>
+      {!hideBatchSliders && (
+        <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-lg space-y-3">
+          <h4 className="text-sm font-semibold text-emerald-900">Batch Placement</h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label className="text-xs text-emerald-800">Detached</label>
-              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.detachedPct}%</span>
+              <label className="text-xs text-emerald-800">Total Buildings</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.totalBuildings}</span>
             </div>
             <input
               type="range"
-              min={0}
+              min={5}
               max={100}
               step={1}
-              value={batchConfig.mix.detachedPct}
-              onChange={(e) => setMix('detachedPct', parseInt(e.target.value, 10))}
-              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
-            />
-            <div className="flex items-center justify-between gap-2">
-              <label className="text-xs text-emerald-800">Townhouses</label>
-              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.townhousePct}%</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={batchConfig.mix.townhousePct}
-              onChange={(e) => setMix('townhousePct', parseInt(e.target.value, 10))}
-              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
-            />
-            <div className="flex items-center justify-between gap-2">
-              <label className="text-xs text-emerald-800">Mid-rise</label>
-              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.midrisePct}%</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={1}
-              value={batchConfig.mix.midrisePct}
-              onChange={(e) => setMix('midrisePct', parseInt(e.target.value, 10))}
+              value={batchConfig.totalBuildings}
+              onChange={(e) => setBatchConfig((c) => ({ ...c, totalBuildings: parseInt(e.target.value, 10) }))}
               className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
             />
           </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs text-emerald-800">Spacing (m)</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.spacing}</span>
+            </div>
+            <input
+              type="range"
+              min={4}
+              max={20}
+              step={1}
+              value={batchConfig.spacing}
+              onChange={(e) => setBatchConfig((c) => ({ ...c, spacing: parseInt(e.target.value, 10) }))}
+              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs text-emerald-800">Footprint (compact ↔ spread)</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.footprintScale.toFixed(1)}</span>
+            </div>
+            <input
+              type="range"
+              min={0.6}
+              max={2}
+              step={0.1}
+              value={batchConfig.footprintScale}
+              onChange={(e) => setBatchConfig((c) => ({ ...c, footprintScale: parseFloat(e.target.value) }))}
+              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+            />
+          </div>
+          <div className="pt-1 border-t border-emerald-200/80">
+            <p className="text-xs text-emerald-800 font-medium mb-2">Housing mix (sum = 100%)</p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs text-emerald-800">Detached</label>
+                <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.detachedPct}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={batchConfig.mix.detachedPct}
+                onChange={(e) => setMix('detachedPct', parseInt(e.target.value, 10))}
+                className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs text-emerald-800">Townhouses</label>
+                <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.townhousePct}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={batchConfig.mix.townhousePct}
+                onChange={(e) => setMix('townhousePct', parseInt(e.target.value, 10))}
+                className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs text-emerald-800">Mid-rise</label>
+                <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.midrisePct}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={batchConfig.mix.midrisePct}
+                onChange={(e) => setMix('midrisePct', parseInt(e.target.value, 10))}
+                className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {batchPlacementConfig !== null && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">

@@ -1,8 +1,10 @@
 /**
  * Central placement validator: parcels, roads, existing buildings.
  * All coordinates in world (x, z); y is ignored for containment.
+ * Roads: use either roadBoxes (from rendered scene meshes) OR roads array (segment math).
  */
 
+import * as THREE from 'three';
 import type { BuildingType } from '@/lib/editor/types/buildingSpec';
 
 export interface Parcel {
@@ -29,11 +31,14 @@ export interface Road {
 
 export interface ValidatePlacementOptions {
   parcels: Parcel[];
+  /** Legacy: road segments for distance-to-segment check. Ignored if roadBoxes is provided. */
   roads: Road[];
   /** Existing building positions with radius (footprint radius). */
   existing: { x: number; z: number; radius: number }[];
-  /** Buffer added to road width (distance from road center). */
+  /** Buffer added to road width (distance from road center). Only used when using roads[]. */
   roadBuffer?: number;
+  /** Use rendered road meshes: world-space bounding boxes (expanded by buffer). Single source of truth. */
+  roadBoxes?: THREE.Box3[];
 }
 
 export interface ValidatePlacementResult {
@@ -98,9 +103,10 @@ export function validatePlacement(
   _type: BuildingType,
   options: ValidatePlacementOptions
 ): ValidatePlacementResult {
-  const { parcels, roads, existing, roadBuffer = 1 } = options;
+  const { parcels, roads, existing, roadBuffer = 1, roadBoxes } = options;
   const px = position.x;
   const pz = position.z;
+  const point = new THREE.Vector3(px, 0, pz);
 
   const radius = 'radius' in buildingFootprint
     ? buildingFootprint.radius
@@ -117,9 +123,17 @@ export function validatePlacement(
     }
   }
 
-  const { onRoad } = minDistToRoads(px, pz, roads, roadBuffer);
-  if (onRoad) {
-    return { ok: false, reason: 'On road' };
+  if (roadBoxes && roadBoxes.length > 0) {
+    for (const box of roadBoxes) {
+      if (box.containsPoint(point)) {
+        return { ok: false, reason: 'Cannot place on road' };
+      }
+    }
+  } else if (roads.length > 0) {
+    const { onRoad } = minDistToRoads(px, pz, roads, roadBuffer);
+    if (onRoad) {
+      return { ok: false, reason: 'Cannot place on road' };
+    }
   }
 
   for (const ex of existing) {
@@ -133,3 +147,24 @@ export function validatePlacement(
 
 /** Default road width (meters) when not specified. */
 export const DEFAULT_ROAD_WIDTH = 8;
+
+/**
+ * Collect world-space bounding boxes from all meshes in the scene marked as roads (userData.isRoad).
+ * Each box is expanded by buffer in all axes. Use for placement validation so the same geometry
+ * that is rendered blocks placement.
+ */
+export function getRoadBoxesFromScene(scene: THREE.Scene | null, buffer: number): THREE.Box3[] {
+  if (!scene) return [];
+  const boxes: THREE.Box3[] = [];
+  const tempBox = new THREE.Box3();
+  const tempPos = new THREE.Vector3();
+  scene.traverse((obj) => {
+    if (!(obj as THREE.Mesh).isMesh) return;
+    const mesh = obj as THREE.Mesh;
+    if (mesh.userData?.isRoad !== true) return;
+    tempBox.setFromObject(mesh);
+    tempBox.expandByScalar(buffer);
+    boxes.push(tempBox.clone());
+  });
+  return boxes;
+}
