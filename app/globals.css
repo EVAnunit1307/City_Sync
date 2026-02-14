@@ -251,6 +251,232 @@
 
 /* Premium animations handled by parallax system */
 
+/* 3D Hero Styles - Technical Archive Aesthetic */
+/* ===== BOARD GAME TABLETOP HERO ===== */
+.hero-board-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #0a0a0a;
+  overflow: hidden;
+  cursor: default;
+}
+
+/* Subtle grain overlay */
+.hero-board-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="300" height="300" filter="url(%23noise)" opacity="0.05"/></svg>');
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Header */
+.hero-board-header {
+  position: absolute;
+  top: 2rem;
+  left: 3rem;
+  z-index: 10;
+}
+
+.hero-board-brand {
+  font-family: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #d4c5a0;
+}
+
+/* 3D Canvas */
+.hero-board-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-board-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Main Content - Left Side */
+.hero-board-content {
+  position: absolute;
+  left: 4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  max-width: 600px;
+}
+
+.hero-board-kicker {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #999;
+  margin: 0 0 0.75rem 0;
+}
+
+.hero-board-title {
+  font-family: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #d4c5a0;
+  text-transform: uppercase;
+  margin: 0 0 1.5rem 0;
+}
+
+.hero-title-dot {
+  color: #7b68ee;
+  font-weight: 700;
+}
+
+.hero-board-subtitle {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #888;
+  margin: 0 0 2.5rem 0;
+  max-width: 500px;
+}
+
+/* CTAs */
+.hero-board-ctas {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero-board-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.hero-board-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.hero-board-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: transparent;
+  color: #b0b0b0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.hero-board-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.hero-board-voice-hint {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Coordinates - Top Right Corner */
+.hero-board-coords {
+  position: absolute;
+  top: 2rem;
+  right: 3rem;
+  z-index: 10;
+  text-align: right;
+}
+
+.coords-line {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #ff6b4a;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.coords-highlight {
+  color: #ff8866;
+}
+
+/* Responsive 3D Hero */
+@media (max-width: 968px) {
+  .hero-3d-header,
+  .hero-3d-title-section,
+  .hero-3d-footer {
+    left: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .hero-3d-title {
+    font-size: 3.5rem;
+  }
+
+  .hero-3d-coords {
+    font-size: 0.65rem;
+  }
+
+  .hero-3d-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .hero-3d-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-3d-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero-3d-coords {
+    align-items: flex-start;
+  }
+
+  .hero-3d-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-3d-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .hero-3d-archive {
+    font-size: 0.65rem;
+  }
+}
+
 /* Responsive Premium Hero */
 @media (max-width: 1200px) {
   .premium-tile-1, .premium-tile-3 {
@@ -1875,5 +2101,56 @@ h3,
 
   .tp-bottom-links a {
     width: 100%;
+  }
+}
+
+/* ===== RESPONSIVE BOARD HERO ===== */
+@media (max-width: 968px) {
+  .hero-board-content {
+    left: 2rem;
+    max-width: calc(100% - 4rem);
+  }
+
+  .hero-board-coords {
+    right: 2rem;
+  }
+
+  .hero-board-title {
+    font-size: 4rem;
+  }
+
+  .hero-board-ctas {
+    flex-direction: column;
+  }
+
+  .hero-board-btn-primary,
+  .hero-board-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-board-header {
+    left: 1.5rem;
+  }
+
+  .hero-board-content {
+    left: 1.5rem;
+    right: 1.5rem;
+    max-width: calc(100% - 3rem);
+  }
+
+  .hero-board-coords {
+    right: 1.5rem;
+    font-size: 0.65rem;
+  }
+
+  .hero-board-title {
+    font-size: 3rem;
+  }
+
+  .hero-board-subtitle {
+    font-size: 1rem;
   }
 }

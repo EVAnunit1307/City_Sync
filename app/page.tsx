@@ -1,89 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-import Floating, { FloatingElement } from "@/components/ui/floating";
 import { ContainerScroll } from "@/components/ui/container-scroll";
 import { MapPin, Building2, BarChart3, Home } from "lucide-react";
-import { heroImageSet } from "@/lib/heroImageSet";
-
-
-// Premium tile positioning for 6 images with varied depth for dramatic parallax
-const premiumTilePositions = [
-  { className: "premium-tile-1", depth: 1.8 },  // Top left - dramatic
-  { className: "premium-tile-2", depth: 0.6 },  // Top center-left - subtle
-  { className: "premium-tile-3", depth: 2.2 },  // Top right - most dramatic
-  { className: "premium-tile-4", depth: 1.0 },  // Bottom left - moderate
-  { className: "premium-tile-5", depth: 1.6 },  // Bottom center - dramatic
-  { className: "premium-tile-6", depth: 0.8 },  // Bottom right - subtle
-];
+import { Hero3D } from "@/components/Hero3D";
 
 export default function Landing() {
   return (
     <main className="premium-page">
-      {/* Premium Technical Hero */}
-      <section className="premium-hero">
-        {/* Fixed Navigation */}
-        <nav className="premium-nav">
-          <span className="premium-logo">GrowthSync</span>
-          <div className="premium-nav-links">
-            <Link href="/map">Explore Map</Link>
-            <Link href="/editor">3D Builder</Link>
-          </div>
-        </nav>
-
-        {/* Premium Floating Tiles Container */}
-        <Floating className="premium-floating-container" sensitivity={2.5} easingFactor={0.08}>
-          {heroImageSet.map((image, index) => {
-            const position = premiumTilePositions[index];
-            return (
-              <FloatingElement 
-                key={image.id} 
-                depth={position.depth} 
-                className={`premium-tile ${position.className}`}
-              >
-                <div className="premium-tile-wrapper">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    sizes="(max-width: 768px) 300px, 400px"
-                    className="premium-tile-image"
-                    style={{ objectPosition: image.focalPosition }}
-                  />
-                  <div className="premium-tile-overlay" />
-                  <div className="premium-tile-border" />
-                </div>
-              </FloatingElement>
-            );
-          })}
-        </Floating>
-
-        {/* Center Content */}
-        <div className="premium-center-content">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <h1 className="premium-title">
-              GrowthSync<span className="premium-dot">.</span>
-            </h1>
-            <p className="premium-subtitle">
-              A subdivision digital twin for real-time zoning and mobility impacts.
-            </p>
-            <p className="premium-location">Vaughan, Ontario</p>
-            <Link href="#demo" className="premium-cta-btn">
-              <span>Explore the Platform</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="premium-cta-arrow">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      {/* 3D Interactive Hero */}
+      <Hero3D />
 
       {/* Interactive Demo Section with Tablet */}
       <div id="demo">
