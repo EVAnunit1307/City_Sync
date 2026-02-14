@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import type { BuildingInstance, BuildingSpecification, BuildingId, GroupId } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_BUILDING_SPEC, GROUP_SYNCED_PROPERTIES } from '@/lib/editor/types/buildingSpec';
 import { generateRandomBuildingSpec, generateRandomRotation } from '@/lib/editor/utils/buildingRandomizer';
+import type { BatchConfig } from '@/lib/editor/utils/buildingCluster';
 
 interface BuildingsContextType {
   buildings: BuildingInstance[];
@@ -9,6 +10,12 @@ interface BuildingsContextType {
   selectedBuildingIds: BuildingId[];  // For multi-select (merge feature)
   placementMode: boolean;
   mergeMode: boolean;
+  /** When set, next grid click places a batch at that point and this is cleared (one-time batch placement). */
+  batchPlacementConfig: BatchConfig | null;
+  setBatchPlacementConfig: (config: BatchConfig | null) => void;
+  /** Short-lived message for placement validation (e.g. "Outside parcels", "Placed 24/30 (6 blocked)"). */
+  placementMessage: string | null;
+  setPlacementMessage: (message: string | null) => void;
 
   // Building management
   addBuilding: (position: { x: number; y: number; z: number }, spec?: Partial<BuildingSpecification>) => BuildingId;
@@ -46,6 +53,8 @@ export function BuildingsProvider({ children }: BuildingsProviderProps) {
   const [selectedBuildingIds, setSelectedBuildingIds] = useState<BuildingId[]>([]);
   const [placementMode, setPlacementMode] = useState(false);
   const [mergeMode, setMergeMode] = useState(false);
+  const [batchPlacementConfig, setBatchPlacementConfig] = useState<BatchConfig | null>(null);
+  const [placementMessage, setPlacementMessage] = useState<string | null>(null);
 
   const addBuilding = useCallback((position: { x: number; y: number; z: number }, spec?: Partial<BuildingSpecification>) => {
     const newId = `building-${Date.now()}`;
@@ -75,6 +84,7 @@ export function BuildingsProvider({ children }: BuildingsProviderProps) {
     setBuildings(prev => [...prev, ...newBuildings]);
     setSelectedBuildingId(newBuildings[0].id);
     setPlacementMode(false);
+    setBatchPlacementConfig(null);
   }, []);
 
   const removeBuilding = useCallback((id: BuildingId) => {
@@ -245,6 +255,10 @@ export function BuildingsProvider({ children }: BuildingsProviderProps) {
     selectedBuildingIds,
     placementMode,
     mergeMode,
+    batchPlacementConfig,
+    setBatchPlacementConfig,
+    placementMessage,
+    setPlacementMessage,
     addBuilding,
     addBuildings,
     removeBuilding,

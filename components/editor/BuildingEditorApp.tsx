@@ -8,6 +8,7 @@ import { InputPanel } from '@/components/editor/InputPanel/InputPanel';
 import { Scene } from '@/components/editor/Viewport/Scene';
 import { ExportBar } from '@/components/editor/Export/ExportBar';
 import { VoiceDesign } from '@/components/editor/InputPanel/VoiceDesign';
+import { PlacementToast } from '@/components/editor/PlacementToast';
 
 export default function BuildingEditorApp() {
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -46,7 +47,7 @@ export default function BuildingEditorApp() {
         <ExportBar sceneRef={sceneRef} />
       </div>
 
-      {/* Voice Design - Floating Bottom Left */}
+      <PlacementToast />
       <VoiceDesign />
     </BuildingsProvider>
   );

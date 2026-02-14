@@ -6,7 +6,11 @@ import { BuildingWrapper } from './BuildingWrapper';
 import { GoldEffects, GoldBurst } from './GoldParticles';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
 import { DEFAULT_BUILDING_SPEC } from '@/lib/editor/types/buildingSpec';
+import type { BuildingType } from '@/lib/editor/types/buildingSpec';
 import { useBuildingSound } from '@/lib/editor/hooks/useBuildingSound';
+import { generateBuildingCluster, getFootprintForType, FOOTPRINT_RADIUS } from '@/lib/editor/utils/buildingCluster';
+import { validatePlacement } from '@/lib/editor/utils/placementValidation';
+import { DEFAULT_EDITOR_PARCELS, DEFAULT_EDITOR_ROADS, EDITOR_ROAD_WIDTH } from '@/lib/editor/data/editorParcels';
 
 const SNAP_THRESHOLD = 5; // Units within which snapping activates
 
@@ -15,13 +19,45 @@ interface SceneContentProps {
 }
 
 function SceneContent({ sceneRef }: SceneContentProps) {
-  const { buildings, selectedBuildingId, selectBuilding, addBuilding, placementMode, clearSelection } = useBuildings();
+  const {
+    buildings,
+    selectedBuildingId,
+    selectBuilding,
+    addBuilding,
+    addBuildings,
+    placementMode,
+    batchPlacementConfig,
+    setBatchPlacementConfig,
+    setPlacementMessage,
+    clearSelection,
+  } = useBuildings();
   const { scene } = useThree();
   const { play: playSound } = useBuildingSound();
   const gridPlaneRef = useRef<THREE.Mesh>(null);
   const [ghostPosition, setGhostPosition] = useState<{ x: number; y: number; z: number } | null>(null);
   const [isSnapped, setIsSnapped] = useState(false);
+  const [placementValid, setPlacementValid] = useState<boolean | null>(null);
   const [burstEffects, setBurstEffects] = useState<Array<{ id: number; position: [number, number, number] }>>([]);
+
+  const existingForValidation = React.useMemo(
+    () =>
+      buildings.map((b) => ({
+        x: b.position.x,
+        z: b.position.z,
+        radius: b.buildingType ? FOOTPRINT_RADIUS[b.buildingType] : Math.max(b.spec.width, b.spec.depth) / 2,
+      })),
+    [buildings]
+  );
+
+  const validationOptions = React.useMemo(
+    () => ({
+      parcels: DEFAULT_EDITOR_PARCELS,
+      roads: DEFAULT_EDITOR_ROADS,
+      existing: existingForValidation,
+      roadBuffer: 2,
+    }),
+    [existingForValidation]
+  );
 
   // Sync scene ref
   useEffect(() => {
@@ -143,9 +179,10 @@ function SceneContent({ sceneRef }: SceneContentProps) {
   }, [buildings]);
 
   const handlePointerMove = (e: any) => {
-    if (!placementMode) {
+    if (!placementMode && !batchPlacementConfig) {
       setGhostPosition(null);
       setIsSnapped(false);
+      setPlacementValid(null);
       return;
     }
 
@@ -153,15 +190,66 @@ function SceneContent({ sceneRef }: SceneContentProps) {
     const { x, y, z, snapped } = getSnappedPosition(point.x, point.z);
     setGhostPosition({ x, y, z });
     setIsSnapped(snapped);
+
+    const footprint = batchPlacementConfig
+      ? getFootprintForType('detached')
+      : { width: DEFAULT_BUILDING_SPEC.width, depth: DEFAULT_BUILDING_SPEC.depth };
+    const type: BuildingType = batchPlacementConfig ? 'detached' : 'detached';
+    const result = validatePlacement(
+      { x, y, z },
+      footprint,
+      type,
+      validationOptions
+    );
+    setPlacementValid(result.ok);
   };
 
   const handleGridClick = (e: any) => {
+    const point = e.point;
+
+    if (batchPlacementConfig) {
+      const origin = { x: point.x, y: point.y, z: point.z };
+      const cluster = generateBuildingCluster(origin, batchPlacementConfig);
+      const validOptions = validationOptions;
+      const validBuildings = cluster.filter((b) => {
+        const footprint = getFootprintForType(b.buildingType ?? 'detached');
+        const result = validatePlacement(
+          b.position,
+          footprint,
+          b.buildingType ?? 'detached',
+          validOptions
+        );
+        return result.ok;
+      });
+      const skipped = cluster.length - validBuildings.length;
+      if (validBuildings.length > 0) {
+        addBuildings(validBuildings);
+        playSound('brick_place');
+      }
+      if (skipped > 0) {
+        setPlacementMessage(`Placed ${validBuildings.length}/${cluster.length} (${skipped} blocked: roads/parcels/overlap)`);
+      }
+      setBatchPlacementConfig(null);
+      setGhostPosition(null);
+      setIsSnapped(false);
+      setPlacementValid(null);
+      return;
+    }
+
     if (!placementMode) return;
 
-    const point = e.point;
     const { x, y, z } = getSnappedPosition(point.x, point.z);
+    const result = validatePlacement(
+      { x, y, z },
+      { width: DEFAULT_BUILDING_SPEC.width, depth: DEFAULT_BUILDING_SPEC.depth },
+      'detached',
+      validationOptions
+    );
+    if (!result.ok) {
+      setPlacementMessage(result.reason ?? 'Invalid placement');
+      return;
+    }
 
-    // Add burst effect at placement position
     const buildingHeight = DEFAULT_BUILDING_SPEC.floorHeight * DEFAULT_BUILDING_SPEC.numberOfFloors;
     setBurstEffects(prev => [...prev, {
       id: Date.now(),
@@ -172,6 +260,7 @@ function SceneContent({ sceneRef }: SceneContentProps) {
     playSound('brick_place');
     setGhostPosition(null);
     setIsSnapped(false);
+    setPlacementValid(null);
   };
 
   const removeBurstEffect = useCallback((id: number) => {
@@ -222,12 +311,42 @@ function SceneContent({ sceneRef }: SceneContentProps) {
         />
       </group>
 
-      {/* Ghost building preview when in placement mode - shows generic indicator since buildings are randomized */}
-      {placementMode && ghostPosition && (
+      {/* Roads - same geometry as placement validation (single source of truth) */}
+      <group name="editor-roads" userData={{ excludeFromExport: true }}>
+        {DEFAULT_EDITOR_ROADS.flatMap((road) =>
+          road.segments.map((seg, idx) => {
+            const [x0, z0] = seg.from;
+            const [x1, z1] = seg.to;
+            const length = Math.hypot(x1 - x0, z1 - z0) || 1;
+            const midX = (x0 + x1) / 2;
+            const midZ = (z0 + z1) / 2;
+            const rotY = Math.atan2(z1 - z0, x1 - x0);
+            const w = seg.width ?? road.width ?? EDITOR_ROAD_WIDTH;
+            return (
+              <mesh
+                key={`${road.id}-${idx}`}
+                position={[midX, 0.02, midZ]}
+                rotation={[0, rotY, 0]}
+                receiveShadow
+              >
+                <boxGeometry args={[length, 0.05, w]} />
+                <meshStandardMaterial color="#374151" roughness={0.9} metalness={0} />
+              </mesh>
+            );
+          })
+        )}
+      </group>
+
+      {/* Ghost building preview when in placement or batch placement mode */}
+      {(placementMode || batchPlacementConfig) && ghostPosition && (
         <group position={[ghostPosition.x, ghostPosition.y + 5, ghostPosition.z]}>
           <mesh>
             <boxGeometry args={[12, 10, 12]} />
-            <meshStandardMaterial color={isSnapped ? "#22c55e" : "#f59e0b"} transparent opacity={0.35} />
+            <meshStandardMaterial
+              color={placementValid === false ? '#ef4444' : placementValid === true ? '#22c55e' : isSnapped ? '#22c55e' : '#f59e0b'}
+              transparent
+              opacity={0.35}
+            />
           </mesh>
           <GoldEffects
             position={[0, 0, 0]}

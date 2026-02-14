@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { Building } from './Building';
 import { SelectionIndicator } from './SelectionIndicator';
@@ -7,6 +7,9 @@ import type { BuildingInstance } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_TREE_CONFIG } from '@/lib/editor/types/buildingSpec';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
 import { useBuildingSound } from '@/lib/editor/hooks/useBuildingSound';
+import { validatePlacement } from '@/lib/editor/utils/placementValidation';
+import { DEFAULT_EDITOR_PARCELS, DEFAULT_EDITOR_ROADS } from '@/lib/editor/data/editorParcels';
+import { FOOTPRINT_RADIUS } from '@/lib/editor/utils/buildingCluster';
 
 interface BuildingWrapperProps {
   building: BuildingInstance;
@@ -16,24 +19,41 @@ interface BuildingWrapperProps {
 
 export function BuildingWrapper({ building, isSelected, onSelect }: BuildingWrapperProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const { placementMode, addBuilding, mergeMode, toggleBuildingSelection, selectedBuildingIds } = useBuildings();
+  const { buildings, placementMode, addBuilding, setPlacementMessage, mergeMode, toggleBuildingSelection, selectedBuildingIds } = useBuildings();
   const { play: playSound } = useBuildingSound();
 
-  // Check if this building is selected in merge mode
+  const validationOptions = useMemo(() => {
+    const existing = buildings
+      .filter((b) => b.id !== building.id)
+      .map((b) => ({
+        x: b.position.x,
+        z: b.position.z,
+        radius: b.buildingType ? FOOTPRINT_RADIUS[b.buildingType] : Math.max(b.spec.width, b.spec.depth) / 2,
+      }));
+    return {
+      parcels: DEFAULT_EDITOR_PARCELS,
+      roads: DEFAULT_EDITOR_ROADS,
+      existing,
+      roadBuffer: 2,
+    };
+  }, [buildings, building.id, building.buildingType, building.spec.width, building.spec.depth]);
+
   const isMergeSelected = mergeMode && selectedBuildingIds.includes(building.id);
 
   const handleClick = (e: any) => {
     e.stopPropagation();
 
     if (placementMode) {
-      // In placement mode, stack a new building on top of this one
       const buildingHeight = building.spec.floorHeight * building.spec.numberOfFloors;
       const newY = building.position.y + buildingHeight;
-      addBuilding({
-        x: building.position.x,
-        y: newY,
-        z: building.position.z
-      });
+      const position = { x: building.position.x, y: newY, z: building.position.z };
+      const footprint = { width: building.spec.width, depth: building.spec.depth };
+      const result = validatePlacement(position, footprint, building.buildingType ?? 'detached', validationOptions);
+      if (!result.ok) {
+        setPlacementMessage(result.reason ?? 'Invalid placement');
+        return;
+      }
+      addBuilding({ x: position.x, y: position.y, z: position.z });
       playSound('add_floor');
     } else if (mergeMode) {
       // In merge mode, toggle selection

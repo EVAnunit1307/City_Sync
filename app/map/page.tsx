@@ -233,6 +233,7 @@ function MapPageContent() {
     };
     setPlacedBuildings([...placedBuildings, newBuilding]);
     setPendingPlacement(null);
+    setIsPlacementMode(false);
     setTimelineDate(details.startDate);
   };
 

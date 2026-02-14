@@ -7,6 +7,7 @@ import { WindowForm } from './WindowForm';
 import { TreeForm } from './TreeForm';
 import { BlueprintUploader } from './BlueprintUploader';
 import { BuildingList } from './BuildingList';
+import { SubdivisionPanel } from './SubdivisionPanel';
 import { DEFAULT_BUILDING_SPEC } from '@/lib/editor/types/buildingSpec';
 
 type SettingsTab = 'transform' | 'dimensions' | 'textures' | 'windows' | 'trees';
@@ -23,6 +24,7 @@ export function InputPanel() {
   const { getSelectedBuilding, updateBuilding, updateBuildingRotation, updateBuildingPosition } = useBuildings();
   const selectedBuilding = getSelectedBuilding();
   const [activeTab, setActiveTab] = useState<SettingsTab>('transform');
+  const [llmDraftPrompt, setLlmDraftPrompt] = useState('');
 
   const handleUpdate = (updates: Partial<typeof DEFAULT_BUILDING_SPEC>) => {
     if (selectedBuilding) {
@@ -37,18 +39,48 @@ export function InputPanel() {
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 flex flex-col">
-      {/* Fixed Header Section */}
-      <div className="p-6 pb-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Building Designer</h2>
-        </div>
+    <div className="w-full h-full bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 flex flex-col min-h-0">
+      {/* Scrollable left panel content so Subdivision and LLM box are visible */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="p-6 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Building Designer</h2>
+          </div>
 
-        {/* Building List */}
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <BuildingList />
-        </div>
+          {/* Building List */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200">
+            <BuildingList />
+          </div>
 
+          {/* Subdivision: Preset Subdivisions + Custom Subdivision Builder (visible by default) */}
+          <div className="mt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Subdivision</h3>
+            <SubdivisionPanel />
+          </div>
+
+          {/* LLM Planning Assistant placeholder — no API calls yet */}
+          <div className="mt-6 p-4 rounded-xl border border-gray-200 bg-gray-50">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Planning Assistant (LLM) — coming soon
+            </label>
+            <textarea
+              value={llmDraftPrompt}
+              onChange={(e) => setLlmDraftPrompt(e.target.value)}
+              placeholder="Describe a subdivision or ask why an impact changed…"
+              rows={3}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                disabled
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-300 text-gray-500 cursor-not-allowed"
+              >
+                Run
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Building Settings Section - 50% of panel */}

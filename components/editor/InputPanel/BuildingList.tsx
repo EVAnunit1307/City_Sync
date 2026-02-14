@@ -1,5 +1,34 @@
+import { useState, useCallback } from 'react';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
-import { generateBuildingCluster, DEFAULT_CLUSTER_CONFIG } from '@/lib/editor/utils/buildingCluster';
+import { DEFAULT_BATCH_CONFIG, type BatchConfig, type BatchMix } from '@/lib/editor/utils/buildingCluster';
+
+function normalizeMix(mix: BatchMix, changedKey: keyof BatchMix, newValue: number): BatchMix {
+  const clamped = Math.max(0, Math.min(100, Math.round(newValue)));
+  const rest = 100 - clamped;
+  const keys: (keyof BatchMix)[] = ['detachedPct', 'townhousePct', 'midrisePct'];
+  const others = keys.filter((k) => k !== changedKey);
+  const next: BatchMix = { ...mix, [changedKey]: clamped };
+  if (rest <= 0) {
+    others.forEach((k) => (next[k] = 0));
+    return next;
+  }
+  const sumOthers = others.reduce((s, k) => s + mix[k], 0);
+  if (sumOthers <= 0) {
+    const per = Math.floor(rest / others.length);
+    others.forEach((k, i) => (next[k] = i === others.length - 1 ? rest - per * (others.length - 1) : per));
+  } else {
+    const [a, b] = others;
+    const pa = mix[a] / sumOthers;
+    next[a] = Math.round(rest * pa);
+    next[b] = rest - next[a];
+  }
+  const total = next.detachedPct + next.townhousePct + next.midrisePct;
+  if (total !== 100) {
+    const largest = (['detachedPct', 'townhousePct', 'midrisePct'] as const).sort((a, b) => next[b] - next[a])[0];
+    next[largest] = next[largest] + (100 - total);
+  }
+  return next;
+}
 
 export function BuildingList() {
   const {
@@ -9,31 +38,36 @@ export function BuildingList() {
     selectBuilding,
     toggleBuildingSelection,
     removeBuilding,
-    addBuildings,
     placementMode,
     setPlacementMode,
     mergeMode,
     setMergeMode,
     mergeBuildings,
     ungroupBuilding,
+    batchPlacementConfig,
+    setBatchPlacementConfig,
   } = useBuildings();
+
+  const [batchConfig, setBatchConfig] = useState<BatchConfig>(() => ({ ...DEFAULT_BATCH_CONFIG }));
 
   const handleAddBuilding = () => {
     setPlacementMode(true);
   };
 
-  const handlePlaceSubdivisionBatch = () => {
-    const origin = selectedBuildingId
-      ? (() => {
-          const b = buildings.find((x) => x.id === selectedBuildingId);
-          return b ? { x: b.position.x, y: b.position.y, z: b.position.z } : { x: 0, y: 0, z: 0 };
-        })()
-      : { x: 0, y: 0, z: 0 };
-    const cluster = generateBuildingCluster(origin, DEFAULT_CLUSTER_CONFIG);
-    if (cluster.length > 0) {
-      addBuildings(cluster);
-    }
+  const enterBatchPlacementMode = () => {
+    setBatchPlacementConfig({ ...batchConfig });
   };
+
+  const cancelBatchPlacementMode = () => {
+    setBatchPlacementConfig(null);
+  };
+
+  const setMix = useCallback((key: keyof BatchMix, value: number) => {
+    setBatchConfig((prev) => ({
+      ...prev,
+      mix: normalizeMix(prev.mix, key, value),
+    }));
+  }, []);
 
   const handleBuildingClick = (buildingId: string) => {
     if (mergeMode) {
@@ -66,9 +100,9 @@ export function BuildingList() {
             {mergeMode ? 'Cancel' : 'Group'}
           </button>
           <button
-            onClick={handlePlaceSubdivisionBatch}
-            disabled={placementMode || mergeMode}
-            title="Place a subdivision cluster (200 units: 60% detached, 30% townhouse, 10% mid-rise)"
+            onClick={enterBatchPlacementMode}
+            disabled={placementMode || mergeMode || batchPlacementConfig !== null}
+            title={`Enter batch mode: click grid to place ${batchConfig.totalBuildings} buildings (${batchConfig.mix.detachedPct}% detached, ${batchConfig.mix.townhousePct}% townhouse, ${batchConfig.mix.midrisePct}% mid-rise)`}
             className="px-4 py-2 rounded-full font-medium text-sm border-2 bg-gray-100 border-emerald-500/60 text-emerald-700 hover:bg-emerald-500 hover:border-emerald-400 hover:text-white hover:shadow-[0_8px_25px_-5px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 ease-out"
           >
             Place Subdivision (Batch)
@@ -82,6 +116,130 @@ export function BuildingList() {
           </button>
         </div>
       </div>
+
+      {/* Batch Placement controls */}
+      <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-lg space-y-3">
+        <h4 className="text-sm font-semibold text-emerald-900">Batch Placement</h4>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs text-emerald-800">Total Buildings</label>
+            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.totalBuildings}</span>
+          </div>
+          <input
+            type="range"
+            min={5}
+            max={100}
+            step={1}
+            value={batchConfig.totalBuildings}
+            onChange={(e) => setBatchConfig((c) => ({ ...c, totalBuildings: parseInt(e.target.value, 10) }))}
+            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs text-emerald-800">Spacing (m)</label>
+            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.spacing}</span>
+          </div>
+          <input
+            type="range"
+            min={4}
+            max={20}
+            step={1}
+            value={batchConfig.spacing}
+            onChange={(e) => setBatchConfig((c) => ({ ...c, spacing: parseInt(e.target.value, 10) }))}
+            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs text-emerald-800">Footprint (compact ↔ spread)</label>
+            <span className="text-xs font-medium text-emerald-700 tabular-nums">{batchConfig.footprintScale.toFixed(1)}</span>
+          </div>
+          <input
+            type="range"
+            min={0.6}
+            max={2}
+            step={0.1}
+            value={batchConfig.footprintScale}
+            onChange={(e) => setBatchConfig((c) => ({ ...c, footprintScale: parseFloat(e.target.value) }))}
+            className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+          />
+        </div>
+        <div className="pt-1 border-t border-emerald-200/80">
+          <p className="text-xs text-emerald-800 font-medium mb-2">Housing mix (sum = 100%)</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs text-emerald-800">Detached</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.detachedPct}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={batchConfig.mix.detachedPct}
+              onChange={(e) => setMix('detachedPct', parseInt(e.target.value, 10))}
+              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs text-emerald-800">Townhouses</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.townhousePct}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={batchConfig.mix.townhousePct}
+              onChange={(e) => setMix('townhousePct', parseInt(e.target.value, 10))}
+              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs text-emerald-800">Mid-rise</label>
+              <span className="text-xs font-medium text-emerald-700 tabular-nums w-8">{batchConfig.mix.midrisePct}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={batchConfig.mix.midrisePct}
+              onChange={(e) => setMix('midrisePct', parseInt(e.target.value, 10))}
+              className="w-full h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+            />
+          </div>
+        </div>
+      </div>
+
+      {batchPlacementConfig !== null && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm text-emerald-900 font-medium">Batch Placement Mode</p>
+              <p className="text-xs text-emerald-700 mt-1">
+                Click anywhere on the grid to place the batch ({batchPlacementConfig.totalBuildings} buildings). One-time placement.
+              </p>
+              <button
+                onClick={cancelBatchPlacementMode}
+                className="mt-2 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-emerald-400/60 text-emerald-700 hover:bg-emerald-500 hover:border-emerald-400 hover:text-white hover:shadow-[0_4px_15px_-3px_rgba(16,185,129,0.4)] transition-all duration-200 ease-out"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {mergeMode && (
         <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
