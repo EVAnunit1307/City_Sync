@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
         text: text.trim(),
         model_id: 'eleven_flash_v2_5',
         voice_settings: {
-          stability: 0.85,
-          similarity_boost: 0.5,
+          stability: 1.0,
+          similarity_boost: 0.3,
           style: 0.0,
           use_speaker_boost: false,
         },
