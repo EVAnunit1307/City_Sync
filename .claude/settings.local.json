@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npx next build:*)",
+      "WebFetch(domain:epicurusscientific.com)",
+      "Bash(npx next dev:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsx:*)",
+      "Bash(python3:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:elevenlabs.io)",
+      "Bash(node scripts/generate-sounds.mjs:*)",
+      "Bash(dir:*)",
+      "Bash(npx tsc:*)",
+      "Bash(del:*)",
+      "Bash(npm install:*)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\phine\\\\OneDrive\\\\Laptop\\\\HACKATHON\\\\qhacks\\\\qhacks\" -Filter \"*.md\" -Recurse)",
+      "Bash(Where-Object { $_FullName -notmatch \"node_modules\" })",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(git -C \"c:\\\\Users\\\\phine\\\\OneDrive\\\\Laptop\\\\HACKATHON\\\\qhacks\\\\qhacks\" log --oneline)",
+      "Bash(git -C \"c:\\\\Users\\\\phine\\\\OneDrive\\\\Laptop\\\\HACKATHON\\\\qhacks\\\\qhacks\" config user.name:*)",
+      "Bash(git -C \"c:\\\\Users\\\\phine\\\\OneDrive\\\\Laptop\\\\HACKATHON\\\\qhacks\\\\qhacks\" config user.email)",
+      "Bash(git -C \"c:\\\\Users\\\\phine\\\\OneDrive\\\\Laptop\\\\HACKATHON\\\\qhacks\\\\qhacks\" config --get remote.origin.url)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\phine\\OneDrive\\Laptop\\HACKATHON\\qhacks\\qhacks\\public\\sounds",
+      "Bash(sort:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 15 npm run dev:*)"
+    ]
+  }
+}
