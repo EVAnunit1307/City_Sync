@@ -1,9 +1,9 @@
 /**
- * Kingston Official Plan - Land Use Designation layer
+ * Markham / York Region Official Plan - Land Use Designation layer
  * Fetches zoning polygons from ArcGIS MapServer and renders them in Three.js
  *
  * ArcGIS layer 17: Land Use Designation (Official Plan Schedule 3ABC)
- * Source: City of Kingston - https://utility.arcgis.com/.../OfficialPlan/MapServer
+ * Source: York Region / City of Markham - ArcGIS Official Plan MapServer
  */
 
 import * as THREE from "three";
@@ -66,7 +66,7 @@ export interface ZoningGeoJSON {
 
 /**
  * Fetch Land Use Designation polygons from ArcGIS MapServer
- * Uses bbox to limit the query extent (Kingston area)
+ * Uses bbox to limit the query extent (Markham, York Region area)
  */
 export async function fetchZoningGeoJSON(bbox: {
   minLat: number;
@@ -189,7 +189,7 @@ export function renderZoningLayer(
 }
 
 /**
- * Fetch and render the Kingston zoning layer in one call.
+ * Fetch and render the Markham / York Region zoning layer in one call.
  * Returns the group; caller is responsible for adding to scene and cleanup.
  */
 export async function loadAndRenderZoningLayer(

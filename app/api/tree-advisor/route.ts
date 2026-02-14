@@ -1,9 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
-import { KINGSTON_TREES, TREE_DATASET_SUMMARY, KingstonTreeData } from '@/lib/editor/data/kingstonTrees';
+import { getGeminiApiKey, isGeminiConfigured } from '@/lib/geminiEnv';
+import { MARKHAM_TREES, TREE_DATASET_SUMMARY, MarkhamTreeData } from '@/lib/editor/data/markhamTrees';
 import { TreeType, TreeConfig } from '@/lib/editor/types/buildingSpec';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 interface BuildingContext {
   width: number;
@@ -32,10 +31,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Question is required' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
+    const apiKey = getGeminiApiKey();
+    if (!isGeminiConfigured() || !apiKey) {
+      return NextResponse.json({ error: 'Gemini API key not configured. Add GEMINI_API_KEY to .env.local and restart the dev server.' }, { status: 500 });
     }
 
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const buildingInfo = buildingContext
@@ -48,9 +49,9 @@ CURRENT BUILDING SPECIFICATIONS:
 `
       : '';
 
-    const treeDataJson = JSON.stringify(KINGSTON_TREES, null, 2);
+    const treeDataJson = JSON.stringify(MARKHAM_TREES, null, 2);
 
-    const prompt = `You are a tree planting advisor for Kingston, Ontario's Neighbourhood Tree Planting Program.
+    const prompt = `You are a tree planting advisor for Markham, Ontario (York Region) Neighbourhood Tree Planting Program.
 
 ${TREE_DATASET_SUMMARY}
 
@@ -61,7 +62,7 @@ ${buildingInfo}
 
 USER QUESTION: "${question}"
 
-Based on the question and any building context provided, recommend appropriate trees from the Kingston program.
+Based on the question and any building context provided, recommend appropriate trees from the Markham program.
 
 You MUST respond with valid JSON in this exact format:
 {
@@ -77,7 +78,7 @@ IMPORTANT: Keep responses concise!
 - "tips" should have 1-2 tips only, each under 10 words
 
 RULES:
-1. selectedTrees must only contain valid tree IDs from: ${KINGSTON_TREES.map(t => t.id).join(', ')}
+1. selectedTrees must only contain valid tree IDs from: ${MARKHAM_TREES.map(t => t.id).join(', ')}
 2. density (1-10) represents how many trees: 1-3 = sparse, 4-6 = moderate, 7-10 = dense
 3. radius (3-20) is how far from building edge trees should spread in meters
 4. Consider the building size when recommending density and radius
@@ -134,7 +135,7 @@ Respond ONLY with the JSON object, no additional text.`;
     }
 
     // Validate the tree IDs
-    const validTreeIds = KINGSTON_TREES.map(t => t.id);
+    const validTreeIds = MARKHAM_TREES.map(t => t.id);
     const validatedTrees = recommendation.selectedTrees.filter(id =>
       validTreeIds.includes(id as TreeType)
     ) as TreeType[];
@@ -154,8 +155,8 @@ Respond ONLY with the JSON object, no additional text.`;
 
     // Get full tree info for selected trees
     const selectedTreeInfo = validatedTrees.map(id =>
-      KINGSTON_TREES.find(t => t.id === id)
-    ).filter(Boolean) as KingstonTreeData[];
+      MARKHAM_TREES.find(t => t.id === id)
+    ).filter(Boolean) as MarkhamTreeData[];
 
     return NextResponse.json({
       recommendation: validatedRecommendation,

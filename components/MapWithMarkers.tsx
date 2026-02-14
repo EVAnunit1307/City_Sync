@@ -26,7 +26,7 @@ interface MapWithMarkersProps {
 }
 
 export default function MapWithMarkers({
-  initialCenter = [-76.4860, 44.2312], // Kingston, Ontario
+  initialCenter = [-79.3370, 43.8561], // Markham, Ontario (York Region)
   initialZoom = 13,
   style = 'mapbox://styles/mapbox/streets-v12',
   className = 'w-full h-full',

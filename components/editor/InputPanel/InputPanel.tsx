@@ -6,7 +6,6 @@ import { TransformForm } from './TransformForm';
 import { DimensionsForm } from './DimensionsForm';
 import { TextureSelector } from './TextureSelector';
 import { WindowForm } from './WindowForm';
-import { TreeForm } from './TreeForm';
 import { BlueprintUploader } from './BlueprintUploader';
 import { BuildingList } from './BuildingList';
 import { SubdivisionPanel } from './SubdivisionPanel';
@@ -15,7 +14,7 @@ import { DEFAULT_BUILDING_SPEC } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_BATCH_CONFIG, type BatchConfig } from '@/lib/editor/utils/buildingCluster';
 import { ChevronDown, ChevronRight, Building2, BarChart3, FolderKanban, Sparkles } from 'lucide-react';
 
-type SettingsTab = 'transform' | 'dimensions' | 'textures' | 'windows' | 'trees';
+type SettingsTab = 'transform' | 'dimensions' | 'textures' | 'windows';
 type MainTab = 'build' | 'impacts' | 'projects' | 'ai';
 
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
@@ -23,7 +22,6 @@ const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'dimensions', label: 'Dimensions' },
   { id: 'textures', label: 'Textures' },
   { id: 'windows', label: 'Windows' },
-  { id: 'trees', label: 'Trees' },
 ];
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ReactNode }[] = [
@@ -240,7 +238,6 @@ export function InputPanel() {
                 )}
                 {activeTab === 'textures' && <TextureSelector spec={selectedBuilding.spec} onUpdate={handleUpdate} />}
                 {activeTab === 'windows' && <WindowForm spec={selectedBuilding.spec} onUpdate={handleUpdate} />}
-                {activeTab === 'trees' && <TreeForm spec={selectedBuilding.spec} onUpdate={handleUpdate} />}
               </div>
               <div className="mt-2 flex justify-end">
                 <button

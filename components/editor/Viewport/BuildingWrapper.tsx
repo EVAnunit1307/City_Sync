@@ -3,9 +3,7 @@ import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { Building } from './Building';
 import { SelectionIndicator } from './SelectionIndicator';
-import { BuildingTrees } from './Trees';
 import type { BuildingInstance } from '@/lib/editor/types/buildingSpec';
-import { DEFAULT_TREE_CONFIG } from '@/lib/editor/types/buildingSpec';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
 import { useBuildingSound } from '@/lib/editor/hooks/useBuildingSound';
 import { validatePlacement, getRoadBoxesFromScene } from '@/lib/editor/utils/placementValidation';
@@ -67,8 +65,6 @@ export function BuildingWrapper({ building, isSelected, onSelect }: BuildingWrap
     }
   };
 
-  const treeConfig = building.spec.treeConfig || DEFAULT_TREE_CONFIG;
-
   return (
     <>
       <group
@@ -82,15 +78,6 @@ export function BuildingWrapper({ building, isSelected, onSelect }: BuildingWrap
         <Building spec={building.spec} />
         {(isSelected || isMergeSelected) && <SelectionIndicator spec={building.spec} isMergeMode={isMergeSelected} />}
       </group>
-      {/* Trees rendered outside rotation group so they stay upright */}
-      {treeConfig.enabled && (
-        <BuildingTrees
-          buildingPosition={building.position}
-          buildingWidth={building.spec.width}
-          buildingDepth={building.spec.depth}
-          config={treeConfig}
-        />
-      )}
     </>
   );
 }

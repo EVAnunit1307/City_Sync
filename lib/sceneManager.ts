@@ -79,7 +79,7 @@ export function createSceneManager(canvas: HTMLCanvasElement): SceneManager {
     100000, // Far plane
   );
 
-  // Initial position for zoomed out Kingston view
+  // Initial position for zoomed out Markham, York Region view
   // Position above and to the side for good overview
   camera.position.set(0, 3000, 5000);
   camera.lookAt(0, 0, 0);

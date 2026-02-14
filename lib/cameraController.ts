@@ -43,7 +43,7 @@ export function setupControls(
 }
 
 /**
- * Animates camera from Kingston overview to Queen's campus
+ * Animates camera from Markham, York Region overview to study area
  * Smooth flyover animation using TWEEN.js
  *
  * @param camera - The Three.js camera to animate
@@ -59,7 +59,7 @@ export function flyToQueens(
     const [queensLng, queensLat] = CityProjection.getCenter();
     const queensPosition = CityProjection.projectToWorld([queensLng, queensLat]);
 
-    // Starting position: High altitude view of Kingston area
+    // Starting position: High altitude view of Markham, York Region area
     // Position camera far above and to the southwest for dramatic approach
     const startPosition = {
       x: queensPosition.x - 3000, // 3km southwest
@@ -75,7 +75,7 @@ export function flyToQueens(
       z: queensPosition.z + 500,
     };
 
-    // Starting lookAt target: General Kingston area
+    // Starting lookAt target: General Markham, York Region area
     const startTarget = {
       x: queensPosition.x,
       y: 0,

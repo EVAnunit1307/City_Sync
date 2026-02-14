@@ -1,8 +1,8 @@
-# Kingston Event Permit Pre-Checker - Implementation Plan
+# Markham Event Permit Pre-Checker - Implementation Plan
 
 ## Context
 
-Small event organizers in Kingston (students, nonprofits, first-timers) struggle with the permit application process because requirements change based on location, size, alcohol, noise, and other factors. City staff spend excessive time answering repetitive questions and reviewing incomplete applications.
+Small event organizers in Markham (students, nonprofits, first-timers) struggle with the permit application process because requirements change based on location, size, alcohol, noise, and other factors. City staff spend excessive time answering repetitive questions and reviewing incomplete applications.
 
 **Solution**: An adaptive permit pre-checker that asks 8-12 smart questions, auto-generates a checklist of required permits with timelines and contacts, and flags missing information before submission. This is "TurboTax for city permits" - translating complex rules into an understandable system.
 
@@ -38,7 +38,7 @@ Small event organizers in Kingston (students, nonprofits, first-timers) struggle
 
 Multi-step wizard that asks contextual questions:
 - Event basics (name, description)
-- Location (dropdown of Kingston parks/venues OR address input)
+- Location (dropdown of Markham parks/venues OR address input)
 - Date and time (with duration)
 - Estimated attendance
 - Event type checkboxes (alcohol, food, amplified sound, vendor booths)
@@ -88,7 +88,7 @@ interface PermitRequirement {
 }
 ```
 
-**Rules logic** (simplified but authentic Kingston requirements):
+**Rules logic** (simplified but authentic Markham requirements):
 
 1. **Special Event Permit**
    - IF: attendance > 50 OR hasAlcohol OR hasRoadClosure
@@ -117,7 +117,7 @@ interface PermitRequirement {
 
 6. **Food Vendor Permit**
    - IF: hasFood
-   - Contact: Kingston Health Unit
+   - Contact: Markham Health Unit
    - Timeline: 7 days before
 
 7. **Road Closure Permit**
@@ -150,10 +150,10 @@ Clean display of all required permits with:
 - Mobile-responsive
 - Shareable link (encode answers in URL params)
 
-#### 4. Kingston Permit Data Configuration
+#### 4. Markham Permit Data Configuration
 **Owner: Data/Research Person**
 
-Research actual Kingston permit requirements and create:
+Research actual Markham permit requirements and create:
 
 ```typescript
 // config/permits.ts
@@ -164,15 +164,15 @@ export const PERMIT_CATALOG = {
 };
 
 // config/locations.ts
-export const KINGSTON_VENUES = [
+export const MARKHAM_VENUES = [
   { id: 'city-park', name: 'City Park', type: 'park', requiresBooking: true },
   { id: 'springer-market', name: 'Springer Market Square', type: 'square' },
-  // ... real Kingston locations
+  // ... real Markham locations
 ];
 ```
 
 **Research sources**:
-- Kingston.ca official permit pages
+- Markham.ca official permit pages
 - City bylaws (noise, parks, alcohol)
 - AGCO regulations
 - Insurance requirements from actual event applications
@@ -229,7 +229,7 @@ Simple JSON editor or form to let "city staff" update rules without code:
 - Average completion time
 
 #### 10. Multi-language Support
-- French translations (Kingston is bilingual Ontario)
+- French translations (Markham is bilingual Ontario)
 - Simple i18n setup
 
 ---
@@ -250,7 +250,7 @@ Simple JSON editor or form to let "city staff" update rules without code:
 - Hours 28-36: Refine reasoning text, help with integration
 
 **Developer 3: Data/Research Lead**
-- Hours 0-12: Research Kingston permits, bylaws, actual requirements
+- Hours 0-12: Research Markham permits, bylaws, actual requirements
 - Hours 12-18: Create permit catalog config files with real data
 - Hours 18-24: Test scenarios (student concert, farmers market, cultural festival)
 - Hours 24-30: Write demo script, prepare test cases
@@ -294,12 +294,12 @@ qhacks/
 │   │   └── utils.ts
 │   ├── config/
 │   │   ├── permits.ts              # Permit catalog
-│   │   ├── locations.ts            # Kingston venues
+│   │   ├── locations.ts            # Markham venues
 │   │   └── questions.ts            # Question flow config
 │   └── types/
 │       └── index.ts                # TypeScript interfaces
 ├── public/
-│   └── kingston-logo.png
+│   └── markham-logo.png
 ├── tests/
 │   └── rules-engine.test.ts
 ├── package.json
@@ -316,7 +316,7 @@ qhacks/
 Core business logic - pure function that takes event details and returns required permits.
 
 ### 2. `/src/config/permits.ts`
-Complete catalog of Kingston permits with all metadata (cost, timeline, contacts, documents).
+Complete catalog of Markham permits with all metadata (cost, timeline, contacts, documents).
 
 ### 3. `/src/config/questions.ts`
 Configuration-driven question flow - allows easy reordering and conditional logic.
@@ -335,17 +335,17 @@ Reusable component for displaying individual permit requirements.
 ## Data Requirements (Research Needed)
 
 **Must research accurately**:
-1. City of Kingston Special Event Permit requirements
-2. Kingston Parks booking process and fees
-3. Kingston noise bylaws and exemption process
+1. City of Markham Special Event Permit requirements
+2. Markham Parks booking process and fees
+3. Markham noise bylaws and exemption process
 4. AGCO Special Occasion Permit rules
 5. Insurance requirements (typical is $2M liability)
 6. Health Unit food vendor requirements
 7. Road closure permit process and timelines
 
 **Sources**:
-- https://www.cityofkingston.ca/
-- Kingston bylaws
+- https://www.cityofmarkham.ca/
+- Markham bylaws
 - Similar event organizer experiences
 - Phone call to City Clerk's office (if time)
 
@@ -379,13 +379,13 @@ Reusable component for displaying individual permit requirements.
 
 ### Deployment (Hour 32)
 - Deploy to Vercel
-- Custom domain or memorable URL (qhacks-kingston-permits.vercel.app)
+- Custom domain or memorable URL (qhacks-markham-permits.vercel.app)
 - Ensure fast loading (< 2 seconds)
 - Test on mobile
 
 ### Demo Script (3 minutes)
 **Minute 1: Problem Setup**
-- "Small organizers in Kingston struggle with permits"
+- "Small organizers in Markham struggle with permits"
 - "City staff answer same questions repeatedly"
 - "We're not changing rules - we're translating them"
 
@@ -398,7 +398,7 @@ Reusable component for displaying individual permit requirements.
 **Minute 3: Impact & Next Steps**
 - "This saves organizers hours of confusion"
 - "This saves city staff dozens of back-and-forth emails"
-- "Built with real Kingston data - pilot-ready, not just a demo"
+- "Built with real Markham data - pilot-ready, not just a demo"
 - "Extensible to other cities and permit types"
 
 ---
@@ -430,7 +430,7 @@ Reusable component for displaying individual permit requirements.
 **Risk**: Rules engine too complex
 - **Mitigation**: Start with 4-5 permits, add more if time allows
 
-**Risk**: Kingston data hard to research
+**Risk**: Markham data hard to research
 - **Mitigation**: Use publicly available info, clearly note assumptions
 
 **Risk**: UI takes too long
@@ -488,4 +488,4 @@ Ideas to mention in presentation:
 
 ## One-Liner for Pitch
 
-> "We're not changing Kingston's permit rules. We're translating them into a system people can actually understand."
+> "We're not changing Markham's permit rules. We're translating them into a system people can actually understand."

@@ -108,7 +108,7 @@ function MapPageContent() {
   const [showBuildingSelector, setShowBuildingSelector] = useState(false);
   const [showNoiseRipple, setShowNoiseRipple] = useState(true);
   const [showZoningLayer, setShowZoningLayer] = useState(false);
-  // Correct config for Kingston zoning layer (Official Plan)
+  // Correct config for Markham / York Region zoning layer (Official Plan)
   const [zoningOffset, setZoningOffset] = useState({ x: 0, z: 0 });
   const [zoningRotationY, setZoningRotationY] = useState(180);
   const [zoningFlipH, setZoningFlipH] = useState(true);
@@ -583,6 +583,7 @@ function MapPageContent() {
           onDashboardVisibleChange={setDashboardVisible}
           panelsPortalRef={panelsPortalRef}
           debugPlacement={debugPlacement}
+          allowPlacementAnywhere
         />
         {/* Map gradient overlay for better UI contrast */}
         <div className="absolute inset-0 map-gradient pointer-events-none"></div>

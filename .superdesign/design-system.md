@@ -1,4 +1,4 @@
-# Design System - Kingston Municipal Planning Authority
+# Design System - Markham Municipal Planning Authority (York Region)
 
 ## Typography
 

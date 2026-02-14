@@ -3,11 +3,12 @@
  * Call this on app initialization
  */
 
-const KINGSTON_BBOX = {
-  south: 43.851,
-  west: -79.278,
-  north: 43.871,
-  east: -79.248,
+/** Study area: Markham, York Region. Center lat 43.8561, lng -79.3370 */
+const MARKHAM_BBOX = {
+  south: 43.82,
+  west: -79.42,
+  north: 43.89,
+  east: -79.25,
 };
 
 /**
@@ -20,15 +21,15 @@ export async function prefetchMapData() {
   try {
     // Pre-fetch all endpoints in parallel with aggressive caching
     await Promise.allSettled([
-      fetch(`/api/map/buildings?south=${KINGSTON_BBOX.south}&west=${KINGSTON_BBOX.west}&north=${KINGSTON_BBOX.north}&east=${KINGSTON_BBOX.east}`, {
+      fetch(`/api/map/buildings?south=${MARKHAM_BBOX.south}&west=${MARKHAM_BBOX.west}&north=${MARKHAM_BBOX.north}&east=${MARKHAM_BBOX.east}`, {
         cache: 'force-cache',
         next: { revalidate: 86400 },
       }),
-      fetch(`/api/map/roads?south=${KINGSTON_BBOX.south}&west=${KINGSTON_BBOX.west}&north=${KINGSTON_BBOX.north}&east=${KINGSTON_BBOX.east}`, {
+      fetch(`/api/map/roads?south=${MARKHAM_BBOX.south}&west=${MARKHAM_BBOX.west}&north=${MARKHAM_BBOX.north}&east=${MARKHAM_BBOX.east}`, {
         cache: 'force-cache',
         next: { revalidate: 86400 },
       }),
-      fetch(`/api/map/traffic-signals?south=${KINGSTON_BBOX.south}&west=${KINGSTON_BBOX.west}&north=${KINGSTON_BBOX.north}&east=${KINGSTON_BBOX.east}`, {
+      fetch(`/api/map/traffic-signals?south=${MARKHAM_BBOX.south}&west=${MARKHAM_BBOX.west}&north=${MARKHAM_BBOX.north}&east=${MARKHAM_BBOX.east}`, {
         cache: 'force-cache',
         next: { revalidate: 86400 },
       }),

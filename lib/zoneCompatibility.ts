@@ -3,7 +3,7 @@
  * Warns when placing a building in a zone where that use is not permitted.
  */
 
-import { getZoneByCode, type KingstonZoneCode } from "./kingstonZoning";
+import { getZoneByCode, type MarkhamZoneCode } from "./markhamZoning";
 
 const ARCGIS_MAPSERVER_BASE =
   "https://utility.arcgis.com/usrsvcs/servers/2c6aee2bcf524340a3c60a44b9f124a9/rest/services/Planning/OfficialPlan/MapServer";
@@ -48,7 +48,7 @@ export async function fetchZoneAtPoint(
 
 /**
  * Official Plan zone -> allowed Zoning Bylaw categories
- * Based on City of Kingston Official Plan land use designations
+ * Based on York Region / City of Markham Official Plan land use designations
  */
 const OP_ZONE_ALLOWED_CATEGORIES: Record<string, string[]> = {
   RES: ["Urban Residential", "Urban Multi-Residential", "Mixed Use", "Institutional", "Heritage"],
@@ -92,7 +92,7 @@ function getAllowedCategories(opCode: string): string[] {
  */
 export function isZoneCompatible(
   officialPlanCode: string | null,
-  zoningBylawCode: KingstonZoneCode
+  zoningBylawCode: MarkhamZoneCode
 ): boolean {
   if (!officialPlanCode) return true; // No zone data = allow (can't verify)
   const zone = getZoneByCode(zoningBylawCode);
@@ -106,7 +106,7 @@ export function isZoneCompatible(
  */
 export function getZoneCompatibilityWarning(
   officialPlanCode: string | null,
-  zoningBylawCode: KingstonZoneCode
+  zoningBylawCode: MarkhamZoneCode
 ): string | null {
   if (!officialPlanCode) return null;
   if (isZoneCompatible(officialPlanCode, zoningBylawCode)) return null;

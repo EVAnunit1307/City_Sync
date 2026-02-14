@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { getGeminiApiKey, isGeminiConfigured } from '@/lib/geminiEnv';
 
 interface PlacedBuilding {
   id: string;
@@ -70,10 +69,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No buildings provided for analysis' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 });
+    const apiKey = getGeminiApiKey();
+    if (!isGeminiConfigured() || !apiKey) {
+      return NextResponse.json({ error: 'Gemini API key not configured. Add GEMINI_API_KEY to .env.local and restart the dev server.' }, { status: 500 });
     }
 
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Build rich details for Gemini: dimensions, zoning, type so it can estimate impacts
@@ -113,7 +114,7 @@ Use these snapshot values to align your overall impact numbers and summary with 
 `
       : '';
 
-    const prompt = `You are an environmental and urban planning expert analyzing proposed building developments in Markham, Ontario, Canada (coordinates 43.8561°N, 79.2633°W).
+    const prompt = `You are an environmental and urban planning expert analyzing proposed building developments in Markham, Ontario, Canada (York Region) (coordinates 43.8561°N, 79.3370°W).
 
 PROPOSED BUILDINGS FOR ANALYSIS (use dimensions, zoning, and type to estimate impacts):
 ${buildingDetails}
@@ -128,7 +129,7 @@ ESTIMATION INSTRUCTIONS:
 - Your overallImpact.totalCarbonTonnes and treesRequired should be numerical estimates consistent with the building dimensions and zoning. Prefer your own estimates over the snapshot when the snapshot is from a simple calculator.
 
 LOCATION CONTEXT:
-- Area: Kingston, Ontario, Canada - Historic university town on Lake Ontario
+- Area: Markham, Ontario, Canada (York Region) - Study area for suburban growth and urban planning
 - Nearby landmarks: Queen's University campus, Lake Ontario waterfront
 - Climate: Humid continental (Dfb), cold winters, warm summers
 - Ecological zone: Great Lakes-St. Lawrence mixed forest region
@@ -180,7 +181,7 @@ SCORING GUIDELINES:
 - totalCarbonTonnes: Estimate from footprint, height, and zoning (construction + 10-year operational). Typical: 0.3–0.8 t CO2/sq m construction; 0.02–0.05 t/sq m/year operational.
 - treesRequired: Offset totalCarbonTonnes (avg tree ~20 kg CO2/year; use for 10–20 year offset)
 
-Be specific about the Kingston, Ontario context. Reference real features of the area when relevant (Lake Ontario, Queen's University, downtown Kingston, local parks, transit routes).
+Be specific about the Markham, Ontario (York Region) context. Reference real features of the area when relevant (downtown Markham, Unionville, local parks, transit, growth corridors).
 
 Respond ONLY with the JSON object, no additional text.`;
 

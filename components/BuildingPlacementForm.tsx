@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { X, Building2, AlertTriangle } from "lucide-react";
-import { KINGSTON_ZONE_TYPES, type KingstonZoneCode } from "@/lib/kingstonZoning";
+import { MARKHAM_ZONE_TYPES, type MarkhamZoneCode } from "@/lib/markhamZoning";
 import {
   fetchZoneAtPoint,
   getZoneCompatibilityWarning,
 } from "@/lib/zoneCompatibility";
 
 export interface BuildingPlacementDetails {
-  zoneType: KingstonZoneCode;
+  zoneType: MarkhamZoneCode;
   startDate: string; // ISO date
   durationDays: number;
 }
@@ -29,7 +29,7 @@ export function BuildingPlacementForm({
   onSubmit,
   onCancel,
 }: BuildingPlacementFormProps) {
-  const [zoneType, setZoneType] = useState<KingstonZoneCode>("MU1");
+  const [zoneType, setZoneType] = useState<MarkhamZoneCode>("MU1");
   const [durationDays, setDurationDays] = useState(DEFAULT_DURATION_DAYS);
   const [startDate, setStartDate] = useState(
     () => new Date().toISOString().slice(0, 10)
@@ -64,7 +64,7 @@ export function BuildingPlacementForm({
     onSubmit({ zoneType, startDate, durationDays });
   };
 
-  const categories = [...new Set(KINGSTON_ZONE_TYPES.map((z) => z.category))];
+  const categories = [...new Set(MARKHAM_ZONE_TYPES.map((z) => z.category))];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
@@ -97,16 +97,16 @@ export function BuildingPlacementForm({
           {/* Zone Type */}
           <div>
             <label className="block text-[10px] font-bold text-slate-600 uppercase mb-2">
-              Kingston Zoning Type (building use)
+              Markham Zoning Type (building use)
             </label>
             <select
               value={zoneType}
-              onChange={(e) => setZoneType(e.target.value as KingstonZoneCode)}
+              onChange={(e) => setZoneType(e.target.value as MarkhamZoneCode)}
               className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue bg-white"
             >
               {categories.map((cat) => (
                 <optgroup key={cat} label={cat}>
-                  {KINGSTON_ZONE_TYPES.filter((z) => z.category === cat).map(
+                  {MARKHAM_ZONE_TYPES.filter((z) => z.category === cat).map(
                     (z) => (
                       <option key={z.code} value={z.code}>
                         {z.code} - {z.name}

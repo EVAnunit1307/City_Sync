@@ -1,9 +1,9 @@
 /**
- * Kingston, Ontario Zoning By-Law Number 2022-62
- * 76 distinct zone types from cityofkingston.ca
+ * Markham, Ontario (York Region) - Zoning / Land Use
+ * 76 distinct zone types for planning context
  */
 
-export const KINGSTON_ZONE_TYPES = [
+export const MARKHAM_ZONE_TYPES = [
   // Rural Zones
   { code: "AG", name: "Prime Agricultural Area Zone", category: "Rural" },
   { code: "RU", name: "General Rural Area Zone", category: "Rural" },
@@ -70,17 +70,17 @@ export const KINGSTON_ZONE_TYPES = [
   { code: "EPA", name: "Environmental Protection Area Zone", category: "Environmental" },
 ] as const;
 
-export type KingstonZoneCode = (typeof KINGSTON_ZONE_TYPES)[number]["code"];
+export type MarkhamZoneCode = (typeof MARKHAM_ZONE_TYPES)[number]["code"];
 
 /** Get display label for zone (e.g. "UR1 - Urban Residential Zone 1") */
-export function getZoneLabel(code: KingstonZoneCode): string {
-  const z = KINGSTON_ZONE_TYPES.find((t) => t.code === code);
+export function getZoneLabel(code: MarkhamZoneCode): string {
+  const z = MARKHAM_ZONE_TYPES.find((t) => t.code === code);
   return z ? `${z.code} - ${z.name}` : code;
 }
 
 /** Get zone by code */
 export function getZoneByCode(code: string) {
-  return KINGSTON_ZONE_TYPES.find((t) => t.code === code);
+  return MARKHAM_ZONE_TYPES.find((t) => t.code === code);
 }
 
 /**

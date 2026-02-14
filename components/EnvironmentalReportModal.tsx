@@ -135,7 +135,7 @@ export default function EnvironmentalReportModal({
     const reportText = `
 ENVIRONMENTAL IMPACT ASSESSMENT REPORT
 ${asOfLabel ? asOfLabel + "\n" : ""}Generated: ${new Date().toLocaleDateString()}
-Location: Kingston, Ontario, Canada
+Location: Markham, Ontario, Canada (York Region)
 
 ================================================================================
 EXECUTIVE SUMMARY
@@ -247,7 +247,7 @@ END OF REPORT
                 Environmental Impact Assessment
               </h2>
               <p className="text-xs text-slate-500">
-                Kingston, Ontario Development Analysis
+                Markham, Ontario Development Analysis
                 {reportSnapshotDate && (
                   <span className="block mt-0.5 text-green-700 font-medium">
                     Report snapshot as of {new Date(reportSnapshotDate).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
@@ -288,7 +288,7 @@ END OF REPORT
               <p className="text-slate-500 mb-6 max-w-md mx-auto">
                 {snapshot
                   ? `Generate a report using the current timeline snapshot (${new Date(snapshot.timelineDate).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}). Metrics and ${buildings.length} active building${buildings.length !== 1 ? "s" : ""} will be captured at this exact time.`
-                  : `Analyze the environmental and societal impact of ${buildings.length} proposed building${buildings.length !== 1 ? "s" : ""} at their specific GPS coordinates in Kingston, Ontario.`}
+                  : `Analyze the environmental and societal impact of ${buildings.length} proposed building${buildings.length !== 1 ? "s" : ""} at their specific GPS coordinates in Markham, Ontario (York Region).`}
               </p>
               <button
                 onClick={generateReport}

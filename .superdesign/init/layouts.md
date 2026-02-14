@@ -22,8 +22,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Kingston Municipal Planning | Traffic Simulation",
-  description: "Real-time 3D traffic simulation and urban analytics for Kingston",
+  title: "Markham Municipal Planning | Traffic Simulation",
+  description: "Real-time 3D traffic simulation and urban analytics for Markham, York Region",
 };
 
 export default function RootLayout({

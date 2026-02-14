@@ -18,12 +18,6 @@ import { fetchBuildings } from "@/lib/buildingData";
 import { renderBuildings } from "@/lib/buildingRenderer";
 import { renderRoads } from "@/lib/roadRenderer";
 import { createGround } from "@/lib/environmentRenderer";
-import {
-  renderTreesAroundBuilding,
-  getDefaultTreeConfigForMap,
-} from "@/lib/treeRenderer";
-import { TreeConfig } from "@/lib/editor/types/buildingSpec";
-
 // Projection and camera
 import { CityProjection } from "@/lib/projection";
 import {
@@ -95,7 +89,6 @@ interface PlacedBuilding {
     startDate?: string;
     durationDays?: number;
   };
-  treeConfig?: TreeConfig; // Optional tree configuration for landscaping
 }
 
 interface ThreeMapProps {
@@ -138,6 +131,8 @@ interface ThreeMapProps {
   onDashboardVisibleChange?: (visible: boolean) => void;
   /** When set, panels (car details, debug, analytics) are portaled here so they appear above sidebars */
   panelsPortalRef?: React.RefObject<HTMLDivElement | null>;
+  /** When true, skip buildable-area bounds check so placement is allowed anywhere on the ground (e.g. /map page). */
+  allowPlacementAnywhere?: boolean;
 }
 
 type CarType = "sedan" | "suv" | "truck" | "compact";
@@ -447,6 +442,7 @@ export default function ThreeMap({
   dashboardVisible: dashboardVisibleProp,
   onDashboardVisibleChange,
   panelsPortalRef,
+  allowPlacementAnywhere = false,
 }: ThreeMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -466,7 +462,6 @@ export default function ThreeMap({
   );
   const ghostModelRef = useRef<THREE.Group | null>(null);
   const buildingModelsRef = useRef<Map<string, THREE.Group>>(new Map());
-  const buildingTreesRef = useRef<Map<string, THREE.Group>>(new Map()); // Trees for each placed building
   const osmBuildingMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map());
   const composerRef = useRef<EffectComposer | null>(null);
   const outlinePassRef = useRef<OutlinePass | null>(null);
@@ -1494,7 +1489,7 @@ export default function ThreeMap({
           return;
         }
         const worldPoint = pointResult.point.clone();
-        if (!isEligible({ x: worldPoint.x, z: worldPoint.z })) {
+        if (!allowPlacementAnywhere && !isEligible({ x: worldPoint.x, z: worldPoint.z })) {
           if (onPlacementInvalid) onPlacementInvalid("Outside buildable area");
           return;
         }
@@ -1573,7 +1568,7 @@ export default function ThreeMap({
       canvas.addEventListener("click", handleCanvasClick);
       return () => canvas.removeEventListener("click", handleCanvasClick);
     }
-  }, [onCoordinateClick, onBuildingSelect, onPlacementInvalid, isPlacementMode, ghostRotationY, debugPlacement, placedBuildings]);
+  }, [onCoordinateClick, onBuildingSelect, onPlacementInvalid, isPlacementMode, ghostRotationY, debugPlacement, placedBuildings, allowPlacementAnywhere]);
 
   // Debug placement sphere (when debugPlacement is on and we have a marker)
   useEffect(() => {
@@ -1770,13 +1765,6 @@ export default function ThreeMap({
           buildingModelsRef.current.delete(id);
           console.log(`🗑️ Removed building ${id}`);
         }
-        // Also remove associated trees
-        const trees = buildingTreesRef.current.get(id);
-        if (trees) {
-          groupsRef.current?.dynamicObjects.remove(trees);
-          buildingTreesRef.current.delete(id);
-          console.log(`🌲 Removed trees for building ${id}`);
-        }
       }
     });
 
@@ -1857,41 +1845,6 @@ export default function ThreeMap({
           console.log(
             `✅ Loaded building ${building.id} at (${building.position.x.toFixed(1)}, ${building.position.z.toFixed(1)})`,
           );
-
-          // Always generate trees around the building
-          const treeConfig =
-            building.treeConfig || getDefaultTreeConfigForMap();
-          const forcedTreeConfig = { ...treeConfig, enabled: true };
-          if (groupsRef.current) {
-            const bbox = new THREE.Box3().setFromObject(toAdd);
-            const size = bbox.getSize(new THREE.Vector3());
-            const buildingWidth = size.x;
-            const buildingDepth = size.z;
-            const buildingScaleValue = scale.x;
-
-            const otherBuildings: THREE.Object3D[] = [];
-            buildingModelsRef.current.forEach((otherModel, otherId) => {
-              if (otherId !== building.id) {
-                otherBuildings.push(otherModel);
-              }
-            });
-            osmBuildingMeshesRef.current.forEach((osmMesh) => {
-              otherBuildings.push(osmMesh);
-            });
-
-            const treeGroup = renderTreesAroundBuilding(
-              building.position,
-              buildingWidth,
-              buildingDepth,
-              forcedTreeConfig,
-              groupsRef.current.dynamicObjects,
-              buildingScaleValue,
-              toAdd,
-              groupsRef.current.staticGeometry,
-              otherBuildings,
-            );
-            buildingTreesRef.current.set(building.id, treeGroup);
-          }
         },
         undefined,
         (error) => {
@@ -2192,7 +2145,7 @@ export default function ThreeMap({
     groupsRef.current.dynamicObjects.add(group);
   }, [showNoiseRipple, placedBuildings, timelineDate, isReady, buildingScale]);
 
-  // Kingston zoning layer (Official Plan Land Use Designation)
+  // Markham / York Region zoning layer (Official Plan Land Use Designation)
   useEffect(() => {
     const bbox = {
       minLat: 43.851,

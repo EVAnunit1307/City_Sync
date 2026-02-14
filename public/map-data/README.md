@@ -1,6 +1,6 @@
 # Map Data - Static OpenStreetMap Data
 
-This directory contains pre-processed OpenStreetMap data for the Kingston/Queen's University area.
+This directory contains pre-processed OpenStreetMap data for the Markham, York Region study area.
 
 ## Data Files
 
@@ -12,7 +12,7 @@ This directory contains pre-processed OpenStreetMap data for the Kingston/Queen'
 
 ### 20-Story Commercial Building
 - **ID**: `building-custom-20story`
-- **Location**: 44°13'54"N 76°28'47"W (Queen's University area)
+- **Location**: Study area center (Markham, York Region)
 - **Height**: 70 meters (20 stories)
 - **Type**: Commercial
 - **Footprint Coordinates**:
@@ -24,10 +24,11 @@ This directory contains pre-processed OpenStreetMap data for the Kingston/Queen'
 ## Bounding Box
 
 All data covers the following area:
-- South: 44.220°
-- West: -76.510°
-- North: 44.240°
-- East: -76.480°
+- South: 43.82°
+- West: -79.42°
+- North: 43.89°
+- East: -79.25°
+- Center: 43.8561, -79.3370 (Markham, Ontario)
 
 ## Data Source
 

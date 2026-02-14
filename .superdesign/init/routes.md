@@ -14,7 +14,7 @@
 #### `/` - Home Page
 **File**: `app/page.tsx`
 **Layout**: Uses root layout (`app/layout.tsx`)
-**Description**: Main page displaying Kingston Municipal Planning interface with:
+**Description**: Main page displaying Markham Municipal Planning interface with:
 - 3D interactive map (ThreeMap component)
 - Top header with branding and status
 - Left sidebar with real-time analytics
