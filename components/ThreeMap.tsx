@@ -72,7 +72,6 @@ import {
   getGroundHitFromPlane,
   isEligible,
   validatePlacement,
-  getRoadBoxesFromScene,
   DEFAULT_MAP_FOOTPRINT,
 } from "@/lib/placement/placementPipeline";
 
@@ -1319,38 +1318,11 @@ export default function ThreeMap({
       placedBuildings.map((b) => ({ id: b.id, position: [b.lng, b.lat] })),
     );
 
-    // Construction zone: red strips on nearby roads + border ring
+    // Construction zone visuals (red circle/strips) removed; zone logic and speed limits unchanged.
     if (speedZonesGroup) {
       while (speedZonesGroup.children.length > 0) {
         speedZonesGroup.remove(speedZonesGroup.children[0]);
       }
-      const zoneRadiusScene = CONSTRUCTION_ZONE_RADIUS_M * MAP_SCALE;
-      const stripWidth = 6 * MAP_SCALE * 2; // ~2 lanes wide
-
-      placedBuildings.forEach((b) => {
-        const buildingPos: [number, number] = [b.lng, b.lat];
-        const world = CityProjection.projectToWorld(buildingPos);
-
-        // Thin red ring border around the zone
-        const border = createConstructionZoneBorder(zoneRadiusScene);
-        border.position.set(world.x, world.y, world.z);
-        speedZonesGroup.add(border);
-
-        // Paint entire nearby road edges red
-        const nearEdges = roadNetwork.findEdgesNearPosition(
-          buildingPos,
-          CONSTRUCTION_ZONE_RADIUS_M,
-        );
-        nearEdges.forEach((edge) => {
-          if (!edge.geometry || edge.geometry.length < 2) return;
-          const worldPoints = edge.geometry.map((coord) =>
-            CityProjection.projectToWorld(coord as [number, number]),
-          );
-          const strip = createRedStripOnRoad(worldPoints, stripWidth);
-          strip.name = "red-strip-road";
-          speedZonesGroup.add(strip);
-        });
-      });
     }
 
     const buildingsList = placedBuildings.map((b) => ({
@@ -1497,7 +1469,8 @@ export default function ThreeMap({
           console.log("ground hit:", worldPoint.x, worldPoint.y, worldPoint.z);
           setDebugPlacementMarker(worldPoint.clone());
         }
-        const roadBoxes = getRoadBoxesFromScene(sceneRef.current, 2);
+        // Use relaxed validation for individual buildings (same idea as subdivision):
+        // no parcel/road checks so users can place where they want; only check overlap with existing.
         const existing = placedBuildings.map((b) => ({
           x: b.position.x,
           z: b.position.z,
@@ -1507,7 +1480,7 @@ export default function ThreeMap({
           { x: worldPoint.x, y: worldPoint.y, z: worldPoint.z },
           DEFAULT_MAP_FOOTPRINT,
           "detached",
-          { parcels: [], roadBoxes, existing }
+          { parcels: [], roads: [], existing, roadBoxes: [] }
         );
         if (!validation.ok) {
           if (onPlacementInvalid)
