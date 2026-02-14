@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo, useRef } from "react";
+import { useState, useEffect, Suspense, useMemo, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import ThreeMap from "@/components/ThreeMap";
 import {
@@ -39,6 +39,7 @@ import {
   BuildingPlacementForm,
   type BuildingPlacementDetails,
 } from "@/components/BuildingPlacementForm";
+import VoiceCopilot from "@/components/VoiceCopilot";
 
 interface PlacedBuilding {
   id: string;
@@ -485,6 +486,67 @@ function MapPageContent() {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [selectedBuildingId, selectedBuilding, placedBuildings]);
+
+  // Voice copilot: process voice commands for the planning simulator
+  const handleVoiceCommand = useCallback((transcript: string) => {
+    console.log('[VoiceCopilot] Command:', transcript);
+  }, []);
+
+  const handleVoiceProcess = useCallback(async (transcript: string): Promise<string> => {
+    // Check for simple commands first
+    const lower = transcript.toLowerCase();
+
+    if (lower.includes('place') || lower.includes('add building')) {
+      setIsPlacementMode(true);
+      return 'Placement mode activated. Click anywhere on the map to place a building.';
+    }
+
+    if (lower.includes('stop plac') || lower.includes('cancel')) {
+      setIsPlacementMode(false);
+      return 'Placement mode deactivated.';
+    }
+
+    if (lower.includes('report') || lower.includes('environmental') || lower.includes('impact')) {
+      if (buildingsActiveAtTimeline.length > 0) {
+        setShowEnvironmentalReport(true);
+        return `Generating environmental impact report for ${buildingsActiveAtTimeline.length} active building${buildingsActiveAtTimeline.length !== 1 ? 's' : ''}.`;
+      }
+      return 'No active buildings to generate a report for. Place some buildings first.';
+    }
+
+    if (lower.includes('play timeline') || lower.includes('start timeline')) {
+      setIsTimelinePlaying(true);
+      return 'Playing the construction timeline.';
+    }
+
+    if (lower.includes('pause') || lower.includes('stop timeline')) {
+      setIsTimelinePlaying(false);
+      return 'Timeline paused.';
+    }
+
+    if (lower.includes('how many building') || lower.includes('status')) {
+      const co2 = buildingMetrics.co2Emissions.toFixed(1);
+      const energy = buildingMetrics.energyConsumption.toFixed(1);
+      return `You have ${placedBuildings.length} buildings placed, ${buildingsActiveAtTimeline.length} currently active. CO2 emissions are at ${co2} tonnes per year, energy consumption is ${energy} megawatt hours.`;
+    }
+
+    if (lower.includes('noise') || lower.includes('happiness') || lower.includes('sentiment')) {
+      return `Population happiness score is ${populationHappiness} out of 100. Average construction noise is ${avgDb} decibels across ${activeCount} active construction sites.`;
+    }
+
+    if (lower.includes('delete') || lower.includes('remove')) {
+      if (selectedBuildingId) {
+        const id = selectedBuildingId;
+        setPlacedBuildings(prev => prev.filter(b => b.id !== id));
+        setSelectedBuildingId(null);
+        return 'Selected building has been removed.';
+      }
+      return 'No building is selected. Click on a building first to select it.';
+    }
+
+    // Default: acknowledge and suggest
+    return `I heard: "${transcript}". You can say things like "place a building", "generate report", "play timeline", or "what is the status".`;
+  }, [buildingsActiveAtTimeline, placedBuildings, buildingMetrics, populationHappiness, avgDb, activeCount, selectedBuildingId]);
 
   return (
     <div className="relative min-h-screen w-full bg-slate-100 text-slate-800 overflow-hidden">
@@ -1702,6 +1764,13 @@ function MapPageContent() {
           </div>
         </aside>
       </div>
+
+      {/* VOICE COPILOT */}
+      <VoiceCopilot
+        onCommand={handleVoiceCommand}
+        onProcess={handleVoiceProcess}
+        context={`${placedBuildings.length} buildings placed, ${buildingsActiveAtTimeline.length} active`}
+      />
 
       {/* FIXED BOTTOM PANEL: INTEGRATED TIMELINE - only show when at least one building is placed */}
       {placedBuildings.length > 0 && (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // ElevenLabs "Rachel" default voice
+const DEFAULT_VOICE_ID = 'EST9Ui6982FZPSi7gCHi'; // GrowthSync planning copilot voice
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,10 +33,12 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         text: text.trim(),
-        model_id: 'eleven_monolingual_v1',
+        model_id: 'eleven_flash_v2',
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
+          stability: 0.6,
+          similarity_boost: 0.8,
+          style: 0.3,
+          use_speaker_boost: true,
         },
       }),
     });
