@@ -8,43 +8,6 @@ import Floating, { FloatingElement } from "@/components/ui/floating";
 import { ContainerScroll } from "@/components/ui/container-scroll";
 import { MapPin, Building2, BarChart3, Home } from "lucide-react";
 
-const torontoGallery = [
-  {
-    src: "/carousel/kingston-waterfront-at-night.jpg",
-    title: "CN Tower Blue Hour",
-    caption: "Downtown core at dusk",
-  },
-  {
-    src: "/carousel/city-of-kingston-ontario-canada.jpg",
-    title: "Skyline Pulse",
-    caption: "Toronto lights over the waterfront",
-  },
-  {
-    src: "/toronto/toronto-islands-skyline.jpg",
-    title: "Islands Perspective",
-    caption: "View from the Toronto Islands",
-  },
-  {
-    src: "/toronto/toronto-sunset-snake-island.jpg",
-    title: "Snake Island Sunset",
-    caption: "Warm skyline gradient at sunset",
-  },
-  {
-    src: "/toronto/toronto-trillium-park.jpg",
-    title: "Trillium Park",
-    caption: "Open-water skyline framing",
-  },
-  {
-    src: "/toronto/toronto-skyline-canada7.jpg",
-    title: "Harbour Skyline",
-    caption: "High-rise band along Lake Ontario",
-  },
-  {
-    src: "/toronto/toronto-sunset-2010.jpg",
-    title: "Sunset Line",
-    caption: "Evening glow across the city edge",
-  },
-];
 
 const sparks = [
   { className: "tp-spark-1", depth: 1.1 },
@@ -374,44 +337,6 @@ export default function Landing() {
             <Link href="/map" className="tp-feature-link">View Analytics →</Link>
           </motion.div>
         </motion.div>
-      </section>
-
-      {/* Gallery Section */}
-      <section className="tp-gallery-wrap">
-        <div className="tp-gallery-head">
-          <p className="tp-section-label">Toronto Cityscape Gallery</p>
-          <h2>Build with the city in full view.</h2>
-          <p>
-            High-resolution Toronto imagery integrated directly into your planning workflow. 
-            Visualize context, understand scale, and design with real urban fabric.
-          </p>
-        </div>
-
-        <div className="tp-gallery-grid">
-          {torontoGallery.map((item, index) => (
-            <motion.article
-              key={item.src}
-              className="tp-card"
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.45, delay: index * 0.06 }}
-            >
-              <div className="tp-card-image-wrap">
-                <Image
-                  src={item.src}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                />
-              </div>
-              <div className="tp-card-copy">
-                <h3>{item.title}</h3>
-                <p>{item.caption}</p>
-              </div>
-            </motion.article>
-          ))}
-        </div>
       </section>
 
       {/* Bottom CTA */}
