@@ -460,9 +460,9 @@ END OF REPORT
                       <span className="text-2xl font-bold text-slate-800">{computed.transitAccessibilityScore}</span>
                       <span className="text-slate-500 text-sm">/ 100</span>
                     </div>
-                    {computed.matchedCorridors && computed.matchedCorridors.length > 0 && (
+                    {(computed.matchedCorridors ?? []).length > 0 && (
                       <p className="text-xs text-slate-500">
-                        Matched corridors: {computed.matchedCorridors.join(", ")}
+                        Matched corridors: {(computed.matchedCorridors ?? []).join(", ")}
                       </p>
                     )}
                     <div>

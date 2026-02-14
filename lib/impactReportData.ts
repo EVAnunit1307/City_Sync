@@ -55,7 +55,8 @@ export function projectXYToLngLat(x: number, y: number): [number, number] {
  * Columns: X,Y,OBJECTID,PROJECTNAME,LOCATION,WEBLINK,PROJECTTYPE,PROJECTCATEGORY,PROJECTSUBTYPE,STATUS
  */
 export function parseProjectsCSV(csvContent: string): Project[] {
-  const lines = csvContent.trim().split(/\r?\n/);
+  const normalized = normalizeCSVContent(csvContent);
+  const lines = normalized.split('\n');
   if (lines.length < 2) return [];
 
   const header = lines[0].split(',').map((h) => h.trim());
@@ -82,7 +83,13 @@ export function parseProjectsCSV(csvContent: string): Project[] {
     const y = parseFloat(get(yIdx));
     if (Number.isNaN(x) || Number.isNaN(y)) continue;
 
-    const [lng, lat] = projectXYToLngLat(x, y);
+    let lng: number;
+    let lat: number;
+    try {
+      [lng, lat] = projectXYToLngLat(x, y);
+    } catch {
+      continue;
+    }
 
     projects.push({
       objectId: parseInt(get(idIdx), 10) || i,
@@ -160,21 +167,46 @@ function parseCSVLine(line: string): string[] {
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
+const PROJECTS_FILENAME = 'Transportation_Active_Construction_Point.csv';
+const ROUTES_FILENAME = 'Bus_Routes_from_GTFS.csv';
+
+/** Strip BOM and normalize line endings so CSV parses correctly across OS/editors. */
+function normalizeCSVContent(content: string): string {
+  return content.replace(/^\uFEFF/, '').trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+/** Resolve path: prefer data/ then project root (for clones that only have CSVs at root). */
+function resolveDataPath(filename: string): string | null {
+  const inData = path.join(DATA_DIR, filename);
+  if (fs.existsSync(inData)) return inData;
+  const inRoot = path.join(process.cwd(), filename);
+  if (fs.existsSync(inRoot)) return inRoot;
+  return null;
+}
 
 function readProjectsFromDisk(): Project[] {
-  const filePath = path.join(DATA_DIR, 'Transportation_Active_Construction_Point.csv');
-  const content = fs.readFileSync(filePath, 'utf-8');
+  const filePath = resolveDataPath(PROJECTS_FILENAME);
+  if (!filePath) {
+    console.warn(`Impact report: ${PROJECTS_FILENAME} not found in data/ or project root. Using empty list.`);
+    return [];
+  }
+  const content = normalizeCSVContent(fs.readFileSync(filePath, 'utf-8'));
   return parseProjectsCSV(content);
 }
 
 function readRoutesFromDisk(): Route[] {
-  const filePath = path.join(DATA_DIR, 'Bus_Routes_from_GTFS.csv');
-  const content = fs.readFileSync(filePath, 'utf-8');
+  const filePath = resolveDataPath(ROUTES_FILENAME);
+  if (!filePath) {
+    console.warn(`Impact report: ${ROUTES_FILENAME} not found in data/ or project root. Using empty list.`);
+    return [];
+  }
+  const content = normalizeCSVContent(fs.readFileSync(filePath, 'utf-8'));
   return parseRoutesCSV(content);
 }
 
 /**
  * Get projects (cached). Call from API route only (server-side).
+ * Returns [] if file is missing or parse fails.
  */
 export function getProjects(): Project[] {
   if (projectsCache === null) {
@@ -190,6 +222,7 @@ export function getProjects(): Project[] {
 
 /**
  * Get routes (cached). Call from API route only (server-side).
+ * Returns [] if file is missing or parse fails.
  */
 export function getRoutes(): Route[] {
   if (routesCache === null) {
