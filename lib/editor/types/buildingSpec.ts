@@ -118,6 +118,9 @@ export const DEFAULT_BUILDING_SPEC: BuildingSpecification = {
 export type BuildingId = string;
 export type GroupId = string;
 
+/** Building typology for subdivision/cluster (affects default spec presets). */
+export type BuildingType = 'detached' | 'townhouse' | 'midrise';
+
 export interface BuildingInstance {
   id: BuildingId;
   name: string;
@@ -125,6 +128,10 @@ export interface BuildingInstance {
   rotation: number;
   spec: BuildingSpecification;
   groupId?: GroupId;  // Buildings in the same group share textures/windows
+  /** Typology for subdivision batch (optional). */
+  buildingType?: BuildingType;
+  /** Unit count (optional, e.g. for residential). */
+  units?: number;
 }
 
 // Properties that are synced across grouped buildings
