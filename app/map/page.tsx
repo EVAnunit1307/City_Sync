@@ -115,7 +115,15 @@ function MapPageContent() {
   const [showEnvironmentalReport, setShowEnvironmentalReport] = useState(false);
   const [debugOverlayVisible, setDebugOverlayVisible] = useState(false);
   const [dashboardVisible, setDashboardVisible] = useState(false);
+  const [placementError, setPlacementError] = useState<string | null>(null);
+  const [debugPlacement, setDebugPlacement] = useState(false);
   const panelsPortalRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!placementError) return;
+    const t = setTimeout(() => setPlacementError(null), 4000);
+    return () => clearTimeout(t);
+  }, [placementError]);
 
   // Pre-fetch map data and available buildings on mount
   useEffect(() => {
@@ -556,6 +564,7 @@ function MapPageContent() {
         <ThreeMap
           className="w-full h-full"
           onCoordinateClick={handleMapClick}
+          onPlacementInvalid={setPlacementError}
           placedBuildings={placedBuildings}
           isPlacementMode={isPlacementMode}
           buildingScale={buildingScale}
@@ -573,9 +582,20 @@ function MapPageContent() {
           dashboardVisible={dashboardVisible}
           onDashboardVisibleChange={setDashboardVisible}
           panelsPortalRef={panelsPortalRef}
+          debugPlacement={debugPlacement}
         />
         {/* Map gradient overlay for better UI contrast */}
         <div className="absolute inset-0 map-gradient pointer-events-none"></div>
+
+        {/* Placement error toast (e.g. click not on ground) */}
+        {placementError && (
+          <div
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg bg-gray-900 text-white text-sm font-medium max-w-md text-center"
+            role="alert"
+          >
+            {placementError}
+          </div>
+        )}
 
         {/* Placement Mode Indicator */}
         {isPlacementMode && (
@@ -964,11 +984,11 @@ function MapPageContent() {
         >
           <div className="glass rounded-lg p-5 shadow-md h-full border-slate-200 overflow-y-auto custom-scrollbar">
             {/* Traffic controls */}
-            <div className="flex gap-2 mb-4 pb-4 border-b border-slate-100">
+            <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-100">
               <button
                 type="button"
                 onClick={() => setDebugOverlayVisible(!debugOverlayVisible)}
-                className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg shadow text-xs font-medium transition-colors"
+                className="flex-1 min-w-0 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg shadow text-xs font-medium transition-colors"
                 title="Toggle debug overlay (F3)"
               >
                 {debugOverlayVisible ? "Hide" : "Show"} Debug
@@ -976,10 +996,19 @@ function MapPageContent() {
               <button
                 type="button"
                 onClick={() => setDashboardVisible(!dashboardVisible)}
-                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow text-xs font-medium transition-colors"
+                className="flex-1 min-w-0 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow text-xs font-medium transition-colors"
               >
                 Analytics
               </button>
+              <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={debugPlacement}
+                  onChange={(e) => setDebugPlacement(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                <span title="Show sphere at placement point and log hit/rejection">Placement debug</span>
+              </label>
             </div>
             {/* Header */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">

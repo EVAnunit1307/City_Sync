@@ -1,5 +1,6 @@
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
 import { Building } from './Building';
 import { SelectionIndicator } from './SelectionIndicator';
 import { BuildingTrees } from './Trees';
@@ -7,9 +8,11 @@ import type { BuildingInstance } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_TREE_CONFIG } from '@/lib/editor/types/buildingSpec';
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
 import { useBuildingSound } from '@/lib/editor/hooks/useBuildingSound';
-import { validatePlacement } from '@/lib/editor/utils/placementValidation';
-import { DEFAULT_EDITOR_PARCELS, DEFAULT_EDITOR_ROADS } from '@/lib/editor/data/editorParcels';
+import { validatePlacement, getRoadBoxesFromScene } from '@/lib/editor/utils/placementValidation';
+import { DEFAULT_EDITOR_PARCELS } from '@/lib/editor/data/editorParcels';
 import { FOOTPRINT_RADIUS } from '@/lib/editor/utils/buildingCluster';
+
+const ROAD_BUFFER = 2;
 
 interface BuildingWrapperProps {
   building: BuildingInstance;
@@ -22,6 +25,7 @@ export function BuildingWrapper({ building, isSelected, onSelect }: BuildingWrap
   const { buildings, placementMode, addBuilding, setPlacementMessage, mergeMode, toggleBuildingSelection, selectedBuildingIds } = useBuildings();
   const { play: playSound } = useBuildingSound();
 
+  const { scene } = useThree();
   const validationOptions = useMemo(() => {
     const existing = buildings
       .filter((b) => b.id !== building.id)
@@ -32,11 +36,11 @@ export function BuildingWrapper({ building, isSelected, onSelect }: BuildingWrap
       }));
     return {
       parcels: DEFAULT_EDITOR_PARCELS,
-      roads: DEFAULT_EDITOR_ROADS,
+      roads: [],
       existing,
-      roadBuffer: 2,
+      roadBoxes: getRoadBoxesFromScene(scene, ROAD_BUFFER),
     };
-  }, [buildings, building.id, building.buildingType, building.spec.width, building.spec.depth]);
+  }, [buildings, building.id, building.buildingType, building.spec.width, building.spec.depth, scene]);
 
   const isMergeSelected = mergeMode && selectedBuildingIds.includes(building.id);
 
