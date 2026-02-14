@@ -12,6 +12,7 @@ interface BuildingsContextType {
 
   // Building management
   addBuilding: (position: { x: number; y: number; z: number }, spec?: Partial<BuildingSpecification>) => BuildingId;
+  addBuildings: (buildings: BuildingInstance[]) => void;
   removeBuilding: (id: BuildingId) => void;
   updateBuilding: (id: BuildingId, updates: Partial<BuildingSpecification>) => void;
   updateBuildingRotation: (id: BuildingId, rotation: number) => void;
@@ -68,6 +69,13 @@ export function BuildingsProvider({ children }: BuildingsProviderProps) {
 
     return newId;
   }, [buildings.length]);
+
+  const addBuildings = useCallback((newBuildings: BuildingInstance[]) => {
+    if (newBuildings.length === 0) return;
+    setBuildings(prev => [...prev, ...newBuildings]);
+    setSelectedBuildingId(newBuildings[0].id);
+    setPlacementMode(false);
+  }, []);
 
   const removeBuilding = useCallback((id: BuildingId) => {
     setBuildings(prev => prev.filter(b => b.id !== id));
@@ -238,6 +246,7 @@ export function BuildingsProvider({ children }: BuildingsProviderProps) {
     placementMode,
     mergeMode,
     addBuilding,
+    addBuildings,
     removeBuilding,
     updateBuilding,
     updateBuildingRotation,

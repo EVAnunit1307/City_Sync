@@ -1,4 +1,5 @@
 import { useBuildings } from '@/lib/editor/contexts/BuildingsContext';
+import { generateBuildingCluster, DEFAULT_CLUSTER_CONFIG } from '@/lib/editor/utils/buildingCluster';
 
 export function BuildingList() {
   const {
@@ -8,6 +9,7 @@ export function BuildingList() {
     selectBuilding,
     toggleBuildingSelection,
     removeBuilding,
+    addBuildings,
     placementMode,
     setPlacementMode,
     mergeMode,
@@ -18,6 +20,19 @@ export function BuildingList() {
 
   const handleAddBuilding = () => {
     setPlacementMode(true);
+  };
+
+  const handlePlaceSubdivisionBatch = () => {
+    const origin = selectedBuildingId
+      ? (() => {
+          const b = buildings.find((x) => x.id === selectedBuildingId);
+          return b ? { x: b.position.x, y: b.position.y, z: b.position.z } : { x: 0, y: 0, z: 0 };
+        })()
+      : { x: 0, y: 0, z: 0 };
+    const cluster = generateBuildingCluster(origin, DEFAULT_CLUSTER_CONFIG);
+    if (cluster.length > 0) {
+      addBuildings(cluster);
+    }
   };
 
   const handleBuildingClick = (buildingId: string) => {
@@ -49,6 +64,14 @@ export function BuildingList() {
             } disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none`}
           >
             {mergeMode ? 'Cancel' : 'Group'}
+          </button>
+          <button
+            onClick={handlePlaceSubdivisionBatch}
+            disabled={placementMode || mergeMode}
+            title="Place a subdivision cluster (200 units: 60% detached, 30% townhouse, 10% mid-rise)"
+            className="px-4 py-2 rounded-full font-medium text-sm border-2 bg-gray-100 border-emerald-500/60 text-emerald-700 hover:bg-emerald-500 hover:border-emerald-400 hover:text-white hover:shadow-[0_8px_25px_-5px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 ease-out"
+          >
+            Place Subdivision (Batch)
           </button>
           <button
             onClick={handleAddBuilding}
