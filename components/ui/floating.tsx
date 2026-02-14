@@ -2,12 +2,10 @@
 
 import {
   createContext,
-  HTMLAttributes,
   ReactNode,
   useCallback,
   useContext,
   useEffect,
-  useId,
   useRef,
 } from "react";
 import { useAnimationFrame } from "framer-motion";
@@ -22,8 +20,9 @@ interface FloatingContextType {
 
 const FloatingContext = createContext<FloatingContextType | null>(null);
 
-interface FloatingProps extends HTMLAttributes<HTMLDivElement> {
+interface FloatingProps {
   children: ReactNode;
+  className?: string;
   sensitivity?: number;
   easingFactor?: number;
 }
@@ -44,7 +43,7 @@ const Floating = ({
         depth: number;
         currentPosition: { x: number; y: number };
       }
-    >(),
+    >()
   );
   const mousePositionRef = useMousePositionRef(containerRef);
 
@@ -56,7 +55,7 @@ const Floating = ({
         currentPosition: { x: 0, y: 0 },
       });
     },
-    [],
+    []
   );
 
   const unregisterElement = useCallback((id: string) => {
@@ -64,18 +63,20 @@ const Floating = ({
   }, []);
 
   useAnimationFrame(() => {
-    if (!containerRef.current) {
-      return;
-    }
+    if (!containerRef.current) return;
 
     elementsMap.current.forEach((data) => {
       const strength = (data.depth * sensitivity) / 20;
+
+      // Calculate new target position
       const newTargetX = mousePositionRef.current.x * strength;
       const newTargetY = mousePositionRef.current.y * strength;
 
+      // Check if we need to update
       const dx = newTargetX - data.currentPosition.x;
       const dy = newTargetY - data.currentPosition.y;
 
+      // Update position only if we're still moving
       data.currentPosition.x += dx * easingFactor;
       data.currentPosition.y += dy * easingFactor;
 
@@ -87,7 +88,7 @@ const Floating = ({
     <FloatingContext.Provider value={{ registerElement, unregisterElement }}>
       <div
         ref={containerRef}
-        className={cn("absolute left-0 top-0 h-full w-full", className)}
+        className={cn("absolute top-0 left-0 w-full h-full", className)}
         {...props}
       >
         {children}
@@ -98,8 +99,9 @@ const Floating = ({
 
 export default Floating;
 
-interface FloatingElementProps extends HTMLAttributes<HTMLDivElement> {
-  children?: ReactNode;
+interface FloatingElementProps {
+  children: ReactNode;
+  className?: string;
   depth?: number;
 }
 
@@ -107,28 +109,24 @@ export const FloatingElement = ({
   children,
   className,
   depth = 1,
-  ...props
 }: FloatingElementProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
-  const id = useId();
+  const idRef = useRef(Math.random().toString(36).substring(7));
   const context = useContext(FloatingContext);
 
   useEffect(() => {
-    if (!elementRef.current || !context) {
-      return;
-    }
+    if (!elementRef.current || !context) return;
 
     const nonNullDepth = depth ?? 0.01;
-    context.registerElement(id, elementRef.current, nonNullDepth);
 
-    return () => context.unregisterElement(id);
-  }, [context, depth, id]);
+    context.registerElement(idRef.current, elementRef.current, nonNullDepth);
+    return () => context.unregisterElement(idRef.current);
+  }, [depth, context]);
 
   return (
     <div
       ref={elementRef}
       className={cn("absolute will-change-transform", className)}
-      {...props}
     >
       {children}
     </div>
