@@ -52,8 +52,8 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key
 ```
 
 ### Development
- 
-```bash
+
+```bash 
 npm run dev
 ```
 
