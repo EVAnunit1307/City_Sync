@@ -1,4 +1,4 @@
-# GrowthSync – Real-Time Subdivision Impact Simulator
+# GrowthSync – Real-Time Subdivision Impact Simulator 
 
 A 3D digital twin platform that allows city planners to test housing proposals inside an existing neighborhood and instantly see projected impacts on traffic congestion, transit load, infrastructure strain, and financial feasibility.
 
