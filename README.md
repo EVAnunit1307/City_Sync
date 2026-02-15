@@ -129,6 +129,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 ## Team
 
 - **Evan Liem**
+- **Herman Isayenka**
+- **Ishaan Sharma**
 
 ---
 
