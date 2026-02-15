@@ -112,8 +112,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 ---
 
 ## Tech Stack
- 
-| Layer | Technology |
+
+| Layer | Technology | 
 |-------|------------|
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
 | 3D Engine | Three.js, React Three Fiber, Drei |
