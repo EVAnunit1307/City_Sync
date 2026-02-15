@@ -99,8 +99,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 ├── lib/                    # Core logic
 │   ├── editor/             # Building spec types, geometry builders, randomizer
 │   ├── traffic/            # Vehicle behavior, collision, signal coordination
-│   ├── buildingRenderer.ts # Building rendering with varied facades 
-│   ├── projection.ts       # Web Mercator coordinate projection
+│   ├── buildingRenderer.ts # Building rendering with varied facades
+│   ├── projection.ts       # Web Mercator coordinate projection 
 │   ├── roadNetwork.ts      # Road graph and A* pathfinding
 │   └── simulationConfig.ts # Traffic simulation parameters
 ├── public/
