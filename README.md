@@ -72,8 +72,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 
 ---
 
-## Architecture 
-
+## Architecture
+ 
 ```
 Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
                                                        |
