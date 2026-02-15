@@ -71,8 +71,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 6. Ask AI for optimization suggestions
 
 ---
- 
-## Architecture
+
+## Architecture 
 
 ```
 Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
