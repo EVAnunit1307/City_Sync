@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   // Disable React strict mode for Three.js compatibility
   reactStrictMode: false,
 
+  // Enable experimental features for faster builds
+  experimental: {
+    optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei', 'lucide-react', 'framer-motion'],
+  },
+
   images: {
     remotePatterns: [
       {
@@ -19,22 +24,20 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // webpack: (config) => {
-  //   // Handle GLSL shaders
-  //   config.module.rules.push({
-  //     test: /\.(glsl|vs|fs|vert|frag)$/,
-  //     type: 'asset/source',
-  //   });
+  webpack: (config, { isServer }) => {
+    // Optimize large dependencies
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+    };
 
-  //   // Suppress warnings for certain modules
-  //   config.resolve.fallback = {
-  //     ...config.resolve.fallback,
-  //     fs: false,
-  //     path: false,
-  //   };
+    // Don't bundle large data files on server
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'bufferutil', 'utf-8-validate'];
+    }
 
-  //   return config;
-  // },
+    return config;
+  },
 
   // Transpile Three.js and R3F packages
   transpilePackages: ["three", "@react-three/fiber", "@react-three/drei"],
