@@ -109,8 +109,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 └── scripts/                # Data processing utilities
 ```
 
---- 
-
+---
+ 
 ## Tech Stack
 
 | Layer | Technology |
