@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Disable React strict mode for Three.js compatibility
   reactStrictMode: false,
 
+  // Enable Turbopack explicitly
+  turbopack: {},
+
   // Enable experimental features for faster builds
   experimental: {
     optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei', 'lucide-react', 'framer-motion'],

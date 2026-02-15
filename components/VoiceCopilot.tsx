@@ -86,9 +86,9 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
     switch (copilot.phase) {
       case 'listening': return 'bg-blue-500 text-white';
       case 'processing': return 'bg-amber-500 text-white';
-      case 'speaking': return 'bg-green-500 text-white';
-      case 'error': return 'bg-red-100 text-red-500';
-      default: return 'bg-white text-slate-600 hover:bg-violet-500 hover:text-white';
+      case 'speaking': return 'bg-emerald-500 text-white';
+      case 'error': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-white/10 text-white hover:bg-emerald-500 hover:text-white';
     }
   })();
 
@@ -96,7 +96,7 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
     switch (copilot.phase) {
       case 'listening': return 'ring-4 ring-blue-400/50 animate-pulse';
       case 'processing': return 'ring-4 ring-amber-400/50 animate-pulse';
-      case 'speaking': return 'ring-4 ring-green-400/50';
+      case 'speaking': return 'ring-4 ring-emerald-400/50';
       default: return '';
     }
   })();
@@ -116,26 +116,26 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
 
       {/* Chat History Panel */}
       {expanded && history.length > 0 && (
-        <div className="w-80 max-h-64 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="w-80 max-h-64 bg-[#0a0a0a]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">
               Voice History
             </span>
             <button
               onClick={() => { setHistory([]); setExpanded(false); }}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-white/40 hover:text-white transition-colors"
             >
               <X size={14} />
             </button>
           </div>
-          <div className="p-3 space-y-2 overflow-y-auto max-h-48 custom-scrollbar">
+          <div className="p-3 space-y-2 overflow-y-auto max-h-48 editor-sidebar-scroll">
             {history.map((entry, i) => (
               <div
                 key={i}
                 className={`text-[11px] px-3 py-2 rounded-lg ${
                   entry.role === 'user'
-                    ? 'bg-blue-50 text-blue-800 ml-8'
-                    : 'bg-slate-50 text-slate-700 mr-8'
+                    ? 'bg-blue-500/20 text-blue-300 ml-8 border-l-2 border-blue-500/50'
+                    : 'bg-white/5 text-white/80 mr-8 border-l-2 border-emerald-500/50'
                 }`}
               >
                 <span className="font-bold text-[9px] uppercase tracking-wide block mb-0.5 opacity-60">
@@ -149,10 +149,10 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
       )}
 
       {/* Voice Control Island */}
-      <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-full shadow-lg border border-slate-200 pl-4 pr-1.5 py-1.5">
+      <div className="flex items-center gap-2 bg-[#0a0a0a]/95 backdrop-blur-xl rounded-full shadow-lg border border-white/10 pl-4 pr-1.5 py-1.5">
         {/* Status text */}
         <span className={`text-xs select-none min-w-[130px] ${
-          copilot.phase === 'error' ? 'text-red-500' : 'text-slate-400'
+          copilot.phase === 'error' ? 'text-red-400' : 'text-white/60'
         }`}>
           {phaseLabel}
         </span>
@@ -163,8 +163,8 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
             onClick={() => setExpanded(!expanded)}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
               expanded
-                ? 'bg-violet-100 text-violet-600'
-                : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                ? 'bg-emerald-500/20 text-emerald-400'
+                : 'bg-white/5 text-white/40 hover:bg-white/10'
             }`}
           >
             <ChevronUp size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -173,13 +173,13 @@ export default function VoiceCopilot({ onCommand, onProcess, context }: VoiceCop
 
         {/* Phase indicator icon */}
         {copilot.phase === 'processing' && (
-          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-            <Loader2 size={14} className="text-amber-600 animate-spin" />
+          <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <Loader2 size={14} className="text-amber-400 animate-spin" />
           </div>
         )}
         {copilot.phase === 'speaking' && (
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-            <Volume2 size={14} className="text-green-600" />
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <Volume2 size={14} className="text-emerald-400" />
           </div>
         )}
 

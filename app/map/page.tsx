@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Map,
 } from "lucide-react";
+import { MinimalToggle } from "@/components/ui/minimal-toggle";
 import { prefetchMapData } from "@/lib/prefetchMapData";
 import {
   computeHappinessScore,
@@ -546,7 +547,7 @@ function MapPageContent() {
   }, [buildingsActiveAtTimeline, placedBuildings, buildingMetrics, populationHappiness, avgDb, activeCount, selectedBuildingId]);
 
   return (
-    <div className="relative min-h-screen w-full bg-slate-100 text-slate-800 overflow-hidden">
+    <div className="relative min-h-screen w-full bg-[#0a0a0a] text-white overflow-hidden">
       {/* MAP BACKGROUND (3D Simulation) */}
       <div className="absolute inset-0 z-0">
         <ThreeMap
@@ -579,7 +580,7 @@ function MapPageContent() {
         {/* Placement error toast (e.g. click not on ground) */}
         {placementError && (
           <div
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg bg-gray-900 text-white text-sm font-medium max-w-md text-center"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg bg-[#0a0a0a]/95 backdrop-blur-xl border border-red-500/50 text-white text-sm font-medium max-w-md text-center"
             role="alert"
           >
             {placementError}
@@ -588,15 +589,15 @@ function MapPageContent() {
 
         {/* Placement Mode Indicator */}
         {isPlacementMode && (
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 glass border-accent-blue px-6 py-3 rounded-lg shadow-lg z-50 pointer-events-auto flex items-center gap-4">
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/95 backdrop-blur-xl border border-emerald-500/50 px-6 py-3 rounded-lg shadow-lg z-50 pointer-events-auto flex items-center gap-4">
             <div>
-              <p className="text-sm font-black text-accent-blue uppercase tracking-tight">
+              <p className="text-sm font-black text-emerald-400 uppercase tracking-tight">
                 {customModelPath
                   ? "Place your custom building"
                   : "Click on the map to place building"}
               </p>
               {importedBuildingName && (
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-xs text-white/60 mt-1">
                   Model: {importedBuildingName}
                 </p>
               )}
@@ -604,7 +605,7 @@ function MapPageContent() {
             {customModelPath && (
               <button
                 onClick={clearImportedBuilding}
-                className="p-1.5 hover:bg-red-50 rounded-full transition-colors text-slate-400 hover:text-red-600"
+                className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors text-white/40 hover:text-red-400"
                 title="Cancel import"
               >
                 <X size={16} />
@@ -615,19 +616,19 @@ function MapPageContent() {
 
         {/* Imported Building Notification */}
         {customModelPath && !isPlacementMode && (
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 glass border-orange-400 bg-orange-50/90 px-6 py-3 rounded-lg shadow-lg z-50 pointer-events-auto flex items-center gap-4">
-            <Upload size={18} className="text-orange-600" />
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/95 backdrop-blur-xl border border-amber-500/50 px-6 py-3 rounded-lg shadow-lg z-50 pointer-events-auto flex items-center gap-4">
+            <Upload size={18} className="text-amber-400" />
             <div>
-              <p className="text-sm font-black text-orange-700 uppercase tracking-tight">
+              <p className="text-sm font-black text-amber-400 uppercase tracking-tight">
                 Building imported from Editor
               </p>
-              <p className="text-xs text-orange-600 mt-0.5">
+              <p className="text-xs text-white/60 mt-0.5">
                 Click &apos;Place&apos; to position it on the map
               </p>
             </div>
             <button
               onClick={clearImportedBuilding}
-              className="p-1.5 hover:bg-red-100 rounded-full transition-colors text-orange-400 hover:text-red-600"
+              className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors text-white/40 hover:text-red-400"
               title="Discard import"
             >
               <X size={16} />
@@ -684,232 +685,153 @@ function MapPageContent() {
         <aside
           className={`absolute left-6 top-6 w-72 pointer-events-auto flex flex-col gap-3 sidebar-transition ${placedBuildings.length > 0 ? "bottom-32" : "bottom-6"}`}
         >
-          {/* Municipal Branding */}
-
-          {/* Geospatial Layers Panel */}
-          <div className="flex-1 glass rounded-lg p-4 flex flex-col overflow-hidden shadow-sm border-slate-200">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-3!xl lp-nav-logo">GrowthSync</span>
+          {/* Geospatial Layers Panel - Dark Theme */}
+          <div className="flex-1 bg-[#0a0a0a] rounded-lg shadow-lg border border-white/5 overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-white/5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl font-bold text-white tracking-tight">GrowthSync</span>
+              </div>
+              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wide">Geospatial Layers</h3>
             </div>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="ui-label">Geospatial Layers</h3>
-            </div>
 
-            {/* Geospatial Layers: Zoning */}
-            <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
-              <div
-                className={`p-2.5 rounded-md border transition-all cursor-pointer group ${
-                  showZoningLayer
-                    ? "border-slate-200 bg-white"
-                    : "border-slate-100 hover:border-slate-200 bg-white/50"
-                }`}
-                onClick={() => setShowZoningLayer(!showZoningLayer)}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-7 h-7 rounded bg-slate-50 border border-slate-100 flex items-center justify-center transition-colors ${
-                      showZoningLayer
-                        ? "text-accent-blue"
-                        : "text-slate-400 group-hover:text-accent-blue"
-                    }`}
-                  >
-                    <Map size={14} />
+            {/* Layers Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 editor-sidebar-scroll">
+              {/* City Zoning Layer */}
+              <div className="p-4 bg-white/[0.02] border-l-2 border-emerald-500/50 hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center">
+                      <Map size={16} className="text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">City Zoning</p>
+                      <p className="text-xs text-white/50">Official Plan · Land Use Designation</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-[11px] font-bold text-slate-900">
-                      City Zoning
-                    </p>
-                    <p className="text-[9px] text-slate-500">
-                      Official Plan · Land Use Designation
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={showZoningLayer}
-                      onChange={(e) => setShowZoningLayer(e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="accent-accent-blue h-3.5 w-3.5"
-                    />
-                  </div>
+                  <MinimalToggle
+                    checked={showZoningLayer}
+                    onChange={(e) => setShowZoningLayer(e.target.checked)}
+                  />
                 </div>
               </div>
 
-              {/* Zoning alignment controls - commented out (correct config: flipH=true, rotationY=180) */}
-              {/* {showZoningLayer && (
-                <div
-                  className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className="text-[9px] font-bold text-slate-600 uppercase">
-                    Align Zone Position
-                  </p>
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-[9px] text-slate-500 block mb-0.5">X</label>
-                      <input
-                        type="number"
-                        value={zoningOffset.x}
-                        onChange={(e) =>
-                          setZoningOffset((o) => ({
-                            ...o,
-                            x: parseFloat(e.target.value) || 0,
-                          }))
-                        }
-                        className="w-full px-2 py-1 text-[10px] font-mono bg-white border border-slate-200 rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] text-slate-500 block mb-0.5">Z</label>
-                      <input
-                        type="number"
-                        value={zoningOffset.z}
-                        onChange={(e) =>
-                          setZoningOffset((o) => ({
-                            ...o,
-                            z: parseFloat(e.target.value) || 0,
-                          }))
-                        }
-                        className="w-full px-2 py-1 text-[10px] font-mono bg-white border border-slate-200 rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] text-slate-500 block mb-0.5">Rotation Y (°)</label>
-                      <input
-                        type="number"
-                        value={zoningRotationY}
-                        onChange={(e) =>
-                          setZoningRotationY(parseFloat(e.target.value) || 0)
-                        }
-                        className="w-full px-2 py-1 text-[10px] font-mono bg-white border border-slate-200 rounded"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={zoningFlipH}
-                        onChange={(e) => setZoningFlipH(e.target.checked)}
-                        className="accent-accent-blue h-3.5 w-3.5"
-                      />
-                      <span className="text-[10px] font-medium text-slate-700">
-                        Flip horizontally
-                      </span>
-                    </label>
+              {/* Coordinate Finder Section */}
+              <div className="pt-4 border-t border-white/5">
+                {!clickedCoordinate ? (
+                  <div className="flex items-center gap-2 text-white/40 text-xs">
+                    <MapPin size={14} className="text-white/30" />
+                    <span className="uppercase tracking-wider">
+                      Click anywhere on the map to see coordinates
+                    </span>
                   </div>
-                </div>
-              )} */}
-            </div>
-
-            {/* Coordinate Finder */}
-            <div className="mt-8 pt-6 border-t border-slate-200">
-              {!clickedCoordinate ? (
-                <div className="flex items-center gap-2 text-slate-500 text-[10px]">
-                  <MapPin size={14} className="text-slate-400" />
-                  <span className="uppercase tracking-wider">
-                    Click anywhere on the map to see coordinates
-                  </span>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={14} className="text-accent-blue" />
-                      <h3 className="ui-label">Clicked Coordinate</h3>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={14} className="text-emerald-400" />
+                        <h3 className="text-sm font-medium text-white uppercase tracking-wide">Clicked Coordinate</h3>
+                      </div>
+                      <button
+                        onClick={() => setClickedCoordinate(null)}
+                        className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setClickedCoordinate(null)}
-                      className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-400"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
 
-                  <div className="space-y-3">
-                    <div className="bg-slate-50 rounded-md p-2.5 border border-slate-200">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase mb-1.5">
-                        Geographic
-                      </p>
-                      <div className="space-y-1 text-[10px]">
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Latitude</span>
-                          <span className="font-bold text-slate-900">
-                            {clickedCoordinate.lat.toFixed(6)}°
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Longitude</span>
-                          <span className="font-bold text-slate-900">
-                            {clickedCoordinate.lng.toFixed(6)}°
-                          </span>
+                    <div className="space-y-3">
+                      <div className="bg-white/[0.02] p-3 border-l-2 border-white/10">
+                        <p className="text-[10px] font-bold text-white/50 uppercase mb-2 tracking-wider">
+                          Geographic
+                        </p>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-white/60">Latitude</span>
+                            <span className="font-mono text-white">
+                              {clickedCoordinate.lat.toFixed(6)}°
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/60">Longitude</span>
+                            <span className="font-mono text-white">
+                              {clickedCoordinate.lng.toFixed(6)}°
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-slate-50 rounded-md p-2.5 border border-slate-200">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase mb-1.5">
-                        World
-                      </p>
-                      <div className="space-y-1 text-[10px]">
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">X</span>
-                          <span className="font-bold text-slate-900">
-                            {clickedCoordinate.worldX.toFixed(2)}m
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Y</span>
-                          <span className="font-bold text-slate-900">
-                            {clickedCoordinate.worldY.toFixed(2)}m
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Z</span>
-                          <span className="font-bold text-slate-900">
-                            {clickedCoordinate.worldZ.toFixed(2)}m
-                          </span>
+                      <div className="bg-white/[0.02] p-3 border-l-2 border-white/10">
+                        <p className="text-[10px] font-bold text-white/50 uppercase mb-2 tracking-wider">
+                          World
+                        </p>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-white/60">X</span>
+                            <span className="font-mono text-white">
+                              {clickedCoordinate.worldX.toFixed(2)}m
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/60">Y</span>
+                            <span className="font-mono text-white">
+                              {clickedCoordinate.worldY.toFixed(2)}m
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/60">Z</span>
+                            <span className="font-mono text-white">
+                              {clickedCoordinate.worldZ.toFixed(2)}m
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          `${clickedCoordinate.lat.toFixed(6)}, ${clickedCoordinate.lng.toFixed(6)}`,
-                        );
-                      }}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:border-accent-blue hover:bg-blue-50 rounded text-[10px] font-bold text-slate-700 hover:text-accent-blue transition-colors uppercase tracking-wider"
-                    >
-                      <Copy size={12} />
-                      Copy Coordinates
-                    </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `${clickedCoordinate.lat.toFixed(6)}, ${clickedCoordinate.lng.toFixed(6)}`,
+                          );
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-white/10 rounded text-xs font-bold text-white hover:text-emerald-400 transition-colors uppercase tracking-wider"
+                      >
+                        <Copy size={12} />
+                        Copy Coordinates
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </aside>
 
         {/* RIGHT SIDEBAR: METRIC ANALYSIS */}
         <aside
-          className={`absolute right-6 top-6 w-80 pointer-events-auto sidebar-transition ${placedBuildings.length > 0 ? "bottom-32" : "bottom-6"}`}
+          className={`absolute right-6 top-6 w-64 pointer-events-auto sidebar-transition ${placedBuildings.length > 0 ? "bottom-32" : "bottom-6"}`}
         >
-          <div className="glass rounded-lg p-5 shadow-md h-full border-slate-200 overflow-y-auto custom-scrollbar">
-            {/* Generate Impact Report */}
-            <div className="space-y-4 text-xs">
+          <div className="bg-[#0a0a0a] rounded-lg shadow-lg border border-white/5 h-full overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-white/5">
+              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wide">Impact Analysis</h3>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 editor-sidebar-scroll">
               <div>
                 <button
                   onClick={() => setShowEnvironmentalReport(true)}
                   disabled={buildingsActiveAtTimeline.length === 0}
                   className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-black uppercase tracking-tight transition-all ${
                     buildingsActiveAtTimeline.length > 0
-                      ? "bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg"
-                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg border border-emerald-500/30"
+                      : "bg-white/5 text-white/30 cursor-not-allowed border border-white/5"
                   }`}
                 >
                   <ClipboardList size={18} />
                   <span>Generate Impact Report</span>
                 </button>
-                <p className="text-[9px] text-slate-500 text-center mt-2">
+                <p className="text-[10px] text-white/40 text-center mt-2">
                   {buildingsActiveAtTimeline.length === 0
                     ? "Move timeline to a date with active construction to generate a report"
                     : `Snapshot at current date · ${buildingsActiveAtTimeline.length} building${buildingsActiveAtTimeline.length !== 1 ? "s" : ""}`}
@@ -929,15 +851,15 @@ function MapPageContent() {
 
       {/* FIXED BOTTOM PANEL: INTEGRATED TIMELINE - only show when at least one building is placed */}
       {placedBuildings.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 z-50 glass border-t border-slate-300 px-8 py-4 flex items-center gap-10 shadow-lg">
+        <div className="absolute bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10 px-8 py-4 flex items-center gap-10 shadow-lg">
           {/* Simulation Controls */}
-          <div className="flex items-center gap-4 shrink-0 border-r border-slate-200 pr-10">
+          <div className="flex items-center gap-4 shrink-0 border-r border-white/10 pr-10">
             <button
               onClick={() => setIsTimelinePlaying((p) => !p)}
               className={`w-10 h-10 rounded flex items-center justify-center transition-colors shadow-sm ${
                 isTimelinePlaying
-                  ? "bg-amber-500 text-white hover:bg-amber-600"
-                  : "bg-accent-blue text-white hover:bg-slate-900"
+                  ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-400/30"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-500/30"
               }`}
               title={isTimelinePlaying ? "Pause" : "Play timeline"}
             >
@@ -948,10 +870,10 @@ function MapPageContent() {
               )}
             </button>
             <div>
-              <p className="text-xs font-black text-slate-900 uppercase tracking-tight font-serif">
+              <p className="text-xs font-black text-white uppercase tracking-tight font-serif">
                 Construction Timeline
               </p>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+              <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest">
                 View building progress
               </p>
             </div>
@@ -1002,9 +924,9 @@ function MapPageContent() {
                         const t = parseInt(e.target.value, 10);
                         setTimelineDate(new Date(t).toISOString().slice(0, 10));
                       }}
-                      className="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-blue [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-300 [&::-webkit-slider-thumb]:cursor-grab"
+                      className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-emerald-400 [&::-webkit-slider-thumb]:cursor-grab"
                       style={{
-                        background: `linear-gradient(to right, #003F7C 0%, #003F7C ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`,
+                        background: `linear-gradient(to right, #10b981 0%, #10b981 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
                       }}
                     />
                     <div className="absolute top-4 left-0 right-0 h-4 pointer-events-none">
@@ -1013,7 +935,7 @@ function MapPageContent() {
                         return (
                           <span
                             key={t}
-                            className="absolute text-[8px] text-slate-500 font-mono whitespace-nowrap"
+                            className="absolute text-[8px] text-white/40 font-mono whitespace-nowrap"
                             style={{
                               left: `calc(${tickPct}% - 1px)`,
                               transform: "translateX(-50%)",
@@ -1025,7 +947,7 @@ function MapPageContent() {
                       })}
                     </div>
                   </div>
-                  <div className="flex justify-between px-0.5 text-[8px] text-slate-400 font-bold uppercase">
+                  <div className="flex justify-between px-0.5 text-[8px] text-white/30 font-bold uppercase">
                     <span>Wk 1</span>
                     <span>Week {weekCount}</span>
                   </div>
@@ -1035,12 +957,12 @@ function MapPageContent() {
           </div>
 
           {/* Timestamp & Settings */}
-          <div className="flex items-center gap-4 shrink-0 border-l border-slate-200 pl-10">
+          <div className="flex items-center gap-4 shrink-0 border-l border-white/10 pl-10">
             <div className="flex flex-col items-end">
-              <span className="ui-label mb-1">Active Timestamp</span>
-              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded border border-slate-200">
-                <Clock className="text-slate-400" size={14} />
-                <span className="text-[10px] font-black text-slate-700 uppercase">
+              <span className="text-xs font-medium text-white/50 uppercase tracking-wide mb-1">Active Timestamp</span>
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded border border-white/10">
+                <Clock className="text-white/40" size={14} />
+                <span className="text-[10px] font-black text-white uppercase">
                   {new Date(timelineDate)
                     .toLocaleDateString("en-US", {
                       day: "2-digit",
@@ -1061,7 +983,7 @@ function MapPageContent() {
                     setTimelineDate(minDateStr);
                   }
                 }}
-                className="text-[9px] font-bold text-accent-blue border border-accent-blue px-2 py-1 rounded hover:bg-blue-50 transition-colors uppercase"
+                className="text-[9px] font-bold text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded hover:bg-emerald-500/10 transition-colors uppercase"
                 title="Go to today, or start of project if today is outside range"
               >
                 Today
