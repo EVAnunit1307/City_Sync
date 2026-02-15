@@ -331,10 +331,16 @@
   transform: translateY(-50%);
   z-index: 10;
   max-width: 600px;
-  padding: 2rem;
+}
+
+.hero-board-title-wrapper {
+  padding: 1.5rem 2rem;
   background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.7) 0%, rgba(10, 10, 10, 0.3) 70%, transparent 100%);
   backdrop-filter: blur(4px);
   border-radius: 16px;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  min-width: fit-content;
 }
 
 .hero-board-kicker {
@@ -361,18 +367,6 @@
 .hero-title-dot {
   color: #7b68ee;
   font-weight: 700;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-    text-shadow: 0 0 10px rgba(123, 104, 238, 0.6);
-  }
-  50% {
-    opacity: 0.4;
-    text-shadow: 0 0 20px rgba(123, 104, 238, 0.8);
-  }
 }
 
 .hero-board-subtitle {
@@ -381,8 +375,8 @@
   line-height: 1.5;
   color: #ffffff;
   font-weight: 500;
-  margin: 0 0 0.75rem 0;
-  max-width: 500px;
+  margin: 0;
+  max-width: 600px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
 
@@ -2208,7 +2202,10 @@ h3,
   .hero-board-content {
     left: 2rem;
     max-width: calc(100% - 4rem);
-    padding: 1.5rem;
+  }
+
+  .hero-board-title-wrapper {
+    padding: 1.25rem 1.5rem;
   }
 
   .hero-board-coords {
@@ -2240,7 +2237,10 @@ h3,
     left: 1.5rem;
     right: 1.5rem;
     max-width: calc(100% - 3rem);
-    padding: 1rem;
+  }
+
+  .hero-board-title-wrapper {
+    padding: 1rem 1.25rem;
   }
 
   .hero-board-coords {
@@ -2393,4 +2393,92 @@ h3,
   .carousel-fade-right {
     width: 40px;
   }
+}
+
+/* Custom scrollbar for editor sidebar */
+.editor-sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-sidebar-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.editor-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.editor-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.5);
+}
+
+/* Firefox scrollbar */
+.editor-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.3) rgba(0, 0, 0, 0.2);
+}
+
+/* Stagger animation for editor panel sections */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.editor-section-animate {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
+.editor-section-animate:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.editor-section-animate:nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.editor-section-animate:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.editor-section-animate:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+/* Voice bar entrance animation */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.voice-bar-animate {
+  animation: slideInFromBottom 0.5s ease-out forwards;
+}
+
+/* Subtle pulse for voice bar label when active */
+@keyframes labelPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.voice-label-active {
+  animation: labelPulse 2s ease-in-out infinite;
 }

@@ -32,7 +32,7 @@ function EditorLayout() {
           <button
             type="button"
             onClick={() => setPlacementMode(false)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-200 text-slate-700 hover:bg-slate-300"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white hover:bg-white/20 border border-white/20 transition-all"
           >
             Cancel
           </button>
@@ -41,7 +41,7 @@ function EditorLayout() {
           <button
             type="button"
             onClick={() => setBatchPlacementConfig(null)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-200 text-slate-700 hover:bg-slate-300"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white hover:bg-white/20 border border-white/20 transition-all"
           >
             Clear
           </button>
@@ -52,42 +52,59 @@ function EditorLayout() {
   );
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100">
-      {/* Minimal top bar */}
-      <header className="shrink-0 z-10 flex items-center justify-between px-4 py-2 bg-white/90 backdrop-blur-sm border-b border-slate-200/80">
-        <h1 className="text-sm font-semibold text-slate-800">3D Building Editor</h1>
-        <Link
-          href="/"
-          className="text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-        >
-          ← Back to Map
-        </Link>
-      </header>
-
-      {/* Full-width 3D viewport */}
-      <div className="flex-1 min-h-0 relative">
-        <Scene sceneRef={sceneRef} />
-
-        {/* Placement legend (top-left) */}
-        <div
-          className="absolute left-3 top-3 z-10 flex flex-col gap-1.5 rounded-lg bg-white/85 backdrop-blur-sm border border-slate-200/80 px-3 py-2 shadow-sm text-[10px] font-medium text-slate-600"
-          aria-hidden
-        >
-          <span className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded bg-emerald-500/80" />
-            Valid
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded bg-red-500/80" />
-            Invalid
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]">
+      {/* Dark minimal top bar */}
+      <header className="shrink-0 z-10 flex items-center justify-between px-6 py-3 bg-black/40 backdrop-blur-md border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold text-white tracking-tight">3D Building Editor</h1>
+          <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            {modeLabel}
           </span>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          {drawerActions}
+          <Link
+            href="/"
+            className="text-sm font-medium text-white/70 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition-all"
+          >
+            ← Home
+          </Link>
+        </div>
+      </header>
 
-      {/* Bottom drawer with panel content */}
-      <EditorDrawer title="Editor" modeLabel={modeLabel} actions={drawerActions}>
-        <InputPanel sceneRef={sceneRef} />
-      </EditorDrawer>
+      {/* Main content area with viewport and right sidebar */}
+      <div className="flex flex-1 min-h-0">
+        {/* 3D viewport */}
+        <div className="flex-1 relative">
+          <Scene sceneRef={sceneRef} />
+
+          {/* Placement legend (top-left) - dark theme */}
+          <div
+            className="absolute left-4 top-4 z-10 flex flex-col gap-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 px-4 py-3 shadow-xl"
+            aria-hidden
+          >
+            <span className="flex items-center gap-2 text-xs font-medium text-white/80">
+              <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+              Valid
+            </span>
+            <span className="flex items-center gap-2 text-xs font-medium text-white/80">
+              <span className="w-3 h-3 rounded-full bg-red-500/80" />
+              Invalid
+            </span>
+          </div>
+        </div>
+
+        {/* Right sidebar panel */}
+        <div className="w-full md:w-96 shrink-0 border-l border-white/10 bg-black/30 backdrop-blur-md overflow-y-auto shadow-2xl editor-sidebar-scroll">
+          <div className="sticky top-0 z-10 px-6 py-5 bg-black/60 backdrop-blur-xl border-b border-white/10 shadow-lg">
+            <h2 className="text-xl font-bold text-white tracking-tight">Editor Panel</h2>
+            <p className="text-xs text-white/60 mt-1">Configure your buildings and view impacts</p>
+          </div>
+          <div className="p-6 pb-32 animate-in fade-in duration-300">
+            <InputPanel sceneRef={sceneRef} />
+          </div>
+        </div>
+      </div>
 
       <PlacementToast />
       <VoiceDesign />

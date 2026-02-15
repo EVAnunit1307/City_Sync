@@ -8,6 +8,7 @@ import {
   type SubdivisionPlanEntry,
 } from '@/lib/editor/utils/buildingCluster';
 import type { BuildingType } from '@/lib/editor/types/buildingSpec';
+import { CurtainButton } from '@/components/ui/curtain-button';
 
 type SubdivisionTab = 'presets' | 'custom';
 
@@ -108,15 +109,15 @@ export function SubdivisionPanel() {
   const totalInPlan = customPlan.reduce((s, e) => s + e.count, 0);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex border-b border-gray-200">
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+      <div className="flex border-b border-white/10">
         <button
           type="button"
           onClick={() => setActiveTab('presets')}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'presets'
-              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500'
-              : 'text-gray-600 hover:bg-gray-50'
+              ? 'bg-emerald-500/20 text-emerald-400 border-b-2 border-emerald-500'
+              : 'text-white/60 hover:bg-white/5 hover:text-white'
           }`}
         >
           Preset Subdivisions
@@ -126,8 +127,8 @@ export function SubdivisionPanel() {
           onClick={() => setActiveTab('custom')}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'custom'
-              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500'
-              : 'text-gray-600 hover:bg-gray-50'
+              ? 'bg-emerald-500/20 text-emerald-400 border-b-2 border-emerald-500'
+              : 'text-white/60 hover:bg-white/5 hover:text-white'
           }`}
         >
           Custom Subdivision Builder
@@ -137,28 +138,27 @@ export function SubdivisionPanel() {
       <div className="p-4">
         {activeTab === 'presets' && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-white/60 mb-3">
               Select a preset and click Place to enter placement mode. Click once on the grid to place.
             </p>
             {SUBDIVISION_PRESETS.map((preset) => (
               <div
                 key={preset.id}
-                className="p-3 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors"
+                className="p-3 rounded-lg border border-white/10 bg-white/5 hover:border-emerald-500/40 hover:bg-white/8 transition-all"
               >
-                <div className="font-medium text-gray-900">{preset.name}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{preset.description}</div>
+                <div className="font-medium text-white">{preset.name}</div>
+                <div className="text-xs text-white/60 mt-0.5">{preset.description}</div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-white/50">
                     {preset.plan.map((e) => `${e.count} ${e.type}`).join(', ')}
                   </span>
-                  <button
-                    type="button"
+                  <CurtainButton
+                    text="Place"
                     onClick={() => handlePresetPlace(preset)}
-                    disabled={batchPlacementConfig !== null}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Place
-                  </button>
+                    isDisabled={batchPlacementConfig !== null}
+                    variant="emerald"
+                    size="sm"
+                  />
                 </div>
               </div>
             ))}
@@ -167,47 +167,46 @@ export function SubdivisionPanel() {
 
         {activeTab === 'custom' && (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-white/60">
               Build your plan, then click Place Plan to enter placement mode. Click once on the grid to place.
             </p>
 
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex-1 min-w-[100px]">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Building type</label>
+                <label className="block text-xs font-medium text-white/80 mb-1">Building type</label>
                 <select
                   value={customType}
                   onChange={(e) => setCustomType(e.target.value as BuildingType)}
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 text-white px-3 py-2 text-sm backdrop-blur-sm"
                 >
                   {(['detached', 'townhouse', 'midrise'] as BuildingType[]).map((t) => (
-                    <option key={t} value={t}>
+                    <option key={t} value={t} className="bg-gray-900">
                       {BUILDING_TYPE_LABELS[t]}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="w-20">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                <label className="block text-xs font-medium text-white/80 mb-1">Quantity</label>
                 <input
                   type="number"
                   min={1}
                   max={999}
                   value={customQuantity}
                   onChange={(e) => setCustomQuantity(parseInt(e.target.value, 10) || 1)}
-                  className="w-full rounded border border-gray-300 px-2 py-2 text-sm"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 text-white px-2 py-2 text-sm backdrop-blur-sm"
                 />
               </div>
-              <button
-                type="button"
+              <CurtainButton
+                text="Add to Plan"
                 onClick={handleAddToPlan}
-                className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
-              >
-                Add to Plan
-              </button>
+                variant="outline"
+                size="default"
+              />
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="text-xs font-medium text-gray-700">Spacing (m)</label>
+              <label className="text-xs font-medium text-white/80">Spacing (m)</label>
               <input
                 type="range"
                 min={4}
@@ -215,21 +214,21 @@ export function SubdivisionPanel() {
                 step={1}
                 value={customSpacing}
                 onChange={(e) => setCustomSpacing(parseInt(e.target.value, 10))}
-                className="flex-1 h-2 rounded-full appearance-none bg-emerald-200 accent-emerald-600"
+                className="flex-1 h-2 rounded-full appearance-none bg-emerald-500/20 accent-emerald-500"
               />
-              <span className="text-xs font-medium text-gray-600 tabular-nums w-6">{customSpacing}</span>
+              <span className="text-xs font-medium text-white/80 tabular-nums w-6">{customSpacing}</span>
             </div>
 
             {customPlan.length > 0 && (
               <>
-                <div className="text-xs font-medium text-gray-700">Current plan ({totalInPlan} buildings)</div>
+                <div className="text-xs font-medium text-white/80">Current plan ({totalInPlan} buildings)</div>
                 <ul className="space-y-1 max-h-32 overflow-y-auto">
                   {customPlan.map((entry, index) => (
                     <li
                       key={`${entry.type}-${index}`}
-                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-gray-50"
+                      className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-white/5 border border-white/10"
                     >
-                      <span className="text-sm text-gray-800">
+                      <span className="text-sm text-white">
                         {BUILDING_TYPE_LABELS[entry.type]} × {entry.count}
                       </span>
                       <div className="flex items-center gap-1">
@@ -238,12 +237,12 @@ export function SubdivisionPanel() {
                           min={1}
                           value={entry.count}
                           onChange={(e) => updatePlanQuantity(index, parseInt(e.target.value, 10) || 1)}
-                          className="w-12 rounded border border-gray-300 px-1 py-0.5 text-xs"
+                          className="w-12 rounded border border-white/20 bg-white/10 text-white px-1 py-0.5 text-xs backdrop-blur-sm"
                         />
                         <button
                           type="button"
                           onClick={() => removeFromPlan(index)}
-                          className="p-1 rounded text-red-600 hover:bg-red-50 text-xs"
+                          className="p-1 rounded text-red-400 hover:bg-red-500/20 text-xs transition-colors"
                           title="Remove"
                         >
                           ×
@@ -252,19 +251,19 @@ export function SubdivisionPanel() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  type="button"
+                <CurtainButton
+                  text={`Place Plan (${totalInPlan} buildings)`}
                   onClick={handlePlacePlan}
-                  disabled={batchPlacementConfig !== null}
-                  className="w-full mt-2 px-4 py-2.5 rounded-lg font-medium text-sm bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Place Plan ({totalInPlan} buildings)
-                </button>
+                  isDisabled={batchPlacementConfig !== null}
+                  variant="emerald"
+                  size="default"
+                  className="w-full mt-2"
+                />
               </>
             )}
 
             {customPlan.length === 0 && (
-              <p className="text-xs text-gray-400 italic">Add building types and quantities above to build your plan.</p>
+              <p className="text-xs text-white/50 italic">Add building types and quantities above to build your plan.</p>
             )}
           </div>
         )}

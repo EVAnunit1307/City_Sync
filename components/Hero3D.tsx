@@ -207,12 +207,15 @@ export function Hero3D() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <h1 className="hero-board-title">
-            GrowthSync<span className="hero-title-dot">.</span>
-          </h1>
-          <p className="hero-board-subtitle">
-            Simulate subdivision growth before it gets approved.
-          </p>
+          <div className="hero-board-title-wrapper">
+            <h1 className="hero-board-title">
+              GrowthSync<span className="hero-title-dot">.</span>
+            </h1>
+            <p className="hero-board-subtitle">
+              Simulate subdivision growth before it gets approved.
+            </p>
+          </div>
+          
           <p className="hero-board-subtext">
             Real-time zoning, cost, transit, and congestion impacts.
           </p>

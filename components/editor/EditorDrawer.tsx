@@ -23,14 +23,14 @@ export function EditorDrawer({ children, title = 'Editor', modeLabel, actions }:
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 z-20 flex flex-col rounded-t-2xl overflow-hidden transition-[height] duration-300 ease-out"
+      className="absolute bottom-0 left-0 right-0 z-20 flex flex-col rounded-t-2xl overflow-hidden transition-[height] duration-300 ease-out border-t border-white/10"
       style={{
         height: expanded ? `${EXPANDED_PCT}vh` : `${PEEK_HEIGHT_PX}px`,
         maxHeight: expanded ? '45vh' : undefined,
-        background: 'rgba(255, 255, 255, 0.82)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        boxShadow: '0 -4px 24px rgba(0,0,0,0.08)',
+        background: 'rgba(10, 10, 10, 0.85)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        boxShadow: '0 -4px 32px rgba(0,0,0,0.5)',
       }}
     >
       {/* Handle + top row (always visible) */}
@@ -43,20 +43,15 @@ export function EditorDrawer({ children, title = 'Editor', modeLabel, actions }:
         aria-expanded={expanded}
         aria-label={expanded ? 'Collapse drawer' : 'Expand drawer'}
       >
-        <div className="w-12 h-1 rounded-full bg-slate-300/80 mb-3" aria-hidden />
+        <div className="w-12 h-1 rounded-full bg-white/20 mb-3" aria-hidden />
         <div className="w-full px-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <h2 className="text-base font-semibold text-slate-800 truncate">{title}</h2>
-            {modeLabel && (
-              <span className="text-xs font-medium text-slate-500 truncate tabular-nums">
-                {modeLabel}
-              </span>
-            )}
+            <h2 className="text-base font-semibold text-white truncate">{title}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
             {actions}
           </div>
-          <div className="shrink-0 text-slate-400" aria-hidden>
+          <div className="shrink-0 text-white/40" aria-hidden>
             {expanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
           </div>
         </div>

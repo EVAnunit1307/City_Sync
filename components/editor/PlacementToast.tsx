@@ -18,7 +18,7 @@ export function PlacementToast() {
 
   return (
     <div
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg bg-gray-900 text-white text-sm font-medium max-w-md text-center"
+      className="fixed bottom-32 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-xl bg-black/85 backdrop-blur-md text-white text-sm font-medium max-w-md text-center border border-white/20"
       role="alert"
     >
       {placementMessage}

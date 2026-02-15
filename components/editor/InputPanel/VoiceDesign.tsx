@@ -188,72 +188,150 @@ export function VoiceDesign() {
   const micBgClass = (() => {
     switch (phase) {
       case 'listening':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-500 text-white border border-blue-400/50';
       case 'designing':
-        return 'bg-amber-500 text-white';
+        return 'bg-amber-500 text-white border border-amber-400/50';
       case 'speaking':
-        return 'bg-green-500 text-white';
+        return 'bg-green-500 text-white border border-green-400/50';
       case 'error':
-        return 'bg-red-100 text-red-500';
+        return 'bg-red-500 text-white border border-red-400/50';
       default:
-        return 'bg-gray-100 text-gray-500 hover:bg-violet-500 hover:text-white';
+        return 'bg-white/20 text-white/80 hover:bg-violet-500 hover:text-white border border-white/20 hover:border-violet-400/50';
     }
   })();
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col items-end gap-2">
-      {/* Popover: Last Voice Command details */}
+    <div className="voice-bar-animate fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center px-8 pb-8">
+      {/* Popover: Last Voice Command details - minimal transparent theme */}
       {lastResult && showDetails && (
-        <div className="w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
+        <div className="mb-3 w-full max-w-2xl bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-white uppercase tracking-wide" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
               Last Voice Command
             </span>
             <button
               onClick={() => setShowDetails(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-white/60 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <div>
-            <p className="text-xs font-medium text-gray-400 mb-1">Transcript</p>
-            <p className="text-sm text-gray-800">&ldquo;{lastResult.transcript}&rdquo;</p>
-          </div>
-          {lastResult.config && (
+          <div className="grid md:grid-cols-2 gap-3">
             <div>
-              <p className="text-xs font-medium text-gray-400 mb-1">Parsed Config</p>
-              <pre className="text-[11px] bg-gray-50 rounded-lg p-2.5 overflow-x-auto text-gray-700 leading-relaxed max-h-48 overflow-y-auto">
-                {JSON.stringify(lastResult.config, null, 2)}
-              </pre>
+              <p className="text-xs font-medium text-white/80 mb-1" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>Transcript</p>
+              <p className="text-sm text-white" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>&ldquo;{lastResult.transcript}&rdquo;</p>
             </div>
-          )}
+            {lastResult.config && (
+              <div>
+                <p className="text-xs font-medium text-white/80 mb-1" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>Parsed Config</p>
+                <pre className="text-[11px] bg-black/20 rounded-lg p-2.5 overflow-x-auto text-white leading-relaxed max-h-32 overflow-y-auto border border-white/10">
+                  {JSON.stringify(lastResult.config, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Floating Input Island */}
-      <div className="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 pl-4 pr-1.5 py-1.5">
-        {/* Text / Status area */}
-        <span
-          className={`text-sm select-none min-w-[160px] ${
-            phase === 'error' ? 'text-red-500' : 'text-gray-400'
-          }`}
+      {/* Wide Voice Input Bar - minimal transparent theme */}
+      <div className={`group relative w-full max-w-3xl flex items-center gap-3 bg-black/20 backdrop-blur-sm rounded-2xl shadow-xl border px-6 py-3 transition-all duration-300 ${
+        phase === 'listening' ? 'border-blue-500/40 shadow-blue-500/10' :
+        phase === 'designing' ? 'border-amber-500/40 shadow-amber-500/10' :
+        phase === 'speaking' ? 'border-green-500/40 shadow-green-500/10' :
+        phase === 'error' ? 'border-red-500/40 shadow-red-500/10' :
+        isActive 
+          ? 'border-emerald-500/40 shadow-emerald-500/10' 
+          : 'border-white/10 hover:border-emerald-500/30'
+      }`}>
+        {/* Corner brackets on hover or active - subtle */}
+        <div className={`absolute top-3 left-3 w-6 h-6 transition-opacity duration-300 ${
+          isActive ? 'opacity-60' : 'opacity-0 group-hover:opacity-40'
+        }`}>
+          <div className={`absolute top-0 left-0 w-4 h-0.5 ${
+            phase === 'listening' ? 'bg-blue-400' :
+            phase === 'designing' ? 'bg-amber-400' :
+            phase === 'speaking' ? 'bg-green-400' :
+            'bg-emerald-400'
+          }`} />
+          <div className={`absolute top-0 left-0 w-0.5 h-4 ${
+            phase === 'listening' ? 'bg-blue-400' :
+            phase === 'designing' ? 'bg-amber-400' :
+            phase === 'speaking' ? 'bg-green-400' :
+            'bg-emerald-400'
+          }`} />
+        </div>
+        <div className={`absolute bottom-3 right-3 w-6 h-6 transition-opacity duration-300 ${
+          isActive ? 'opacity-60' : 'opacity-0 group-hover:opacity-40'
+        }`}>
+          <div className={`absolute bottom-0 right-0 w-4 h-0.5 ${
+            phase === 'listening' ? 'bg-blue-400' :
+            phase === 'designing' ? 'bg-amber-400' :
+            phase === 'speaking' ? 'bg-green-400' :
+            'bg-emerald-400'
+          }`} />
+          <div className={`absolute bottom-0 right-0 w-0.5 h-4 ${
+            phase === 'listening' ? 'bg-blue-400' :
+            phase === 'designing' ? 'bg-amber-400' :
+            phase === 'speaking' ? 'bg-green-400' :
+            'bg-emerald-400'
+          }`} />
+        </div>
+        
+        {/* Mic Button */}
+        <button
+          onClick={handleVoiceDesign}
+          disabled={isActive}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-lg ${micBgClass} ${micRingClass} disabled:cursor-not-allowed`}
+          title="Voice Design"
         >
-          {lastResult && phase === 'idle'
-            ? `"${lastResult.transcript.length > 22 ? lastResult.transcript.slice(0, 22) + '...' : lastResult.transcript}"`
-            : placeholderText}
-        </span>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
+            />
+          </svg>
+        </button>
+
+        {/* Text / Status area - expanded with label */}
+        <div className="flex-1 flex flex-col">
+          <span className={`text-xs font-medium mb-0.5 transition-colors duration-200 ${
+            isActive ? 'voice-label-active' : ''
+          } ${
+            phase === 'listening' ? 'text-blue-400' :
+            phase === 'designing' ? 'text-amber-400' :
+            phase === 'speaking' ? 'text-green-400' :
+            phase === 'error' ? 'text-red-400' :
+            'text-emerald-400'
+          }`} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
+            {phase === 'listening' ? '🎤 Listening...' :
+             phase === 'designing' ? '⚙️ Designing...' :
+             phase === 'speaking' ? '🔊 Speaking...' :
+             phase === 'error' ? '❌ Error' :
+             'Voice Design'}
+          </span>
+          <span
+            className={`text-sm select-none transition-colors duration-200 ${
+              phase === 'error' ? 'text-red-400' : 'text-white/70'
+            }`}
+            style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}
+          >
+            {lastResult && phase === 'idle'
+              ? `"${lastResult.transcript.length > 80 ? lastResult.transcript.slice(0, 80) + '...' : lastResult.transcript}"`
+              : placeholderText}
+          </span>
+        </div>
 
         {/* Show details button (only when we have a result) */}
         {lastResult && (
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-lg ${
               showDetails
-                ? 'bg-violet-100 text-violet-600'
-                : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                ? 'bg-violet-500/40 text-violet-300 border border-violet-400/50'
+                : 'bg-white/20 text-white/70 hover:bg-white/30 hover:text-white border border-white/20'
             }`}
             title="Show details"
           >
@@ -263,30 +341,14 @@ export function VoiceDesign() {
           </button>
         )}
 
-        {/* Mic Button */}
-        <button
-          onClick={handleVoiceDesign}
-          disabled={isActive}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${micBgClass} ${micRingClass} disabled:cursor-not-allowed`}
-          title="Voice Design"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
-            />
-          </svg>
-        </button>
-
         {/* Send / Arrow button (acts as secondary trigger) */}
         <button
           onClick={handleVoiceDesign}
           disabled={isActive}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-violet-500 text-white hover:bg-violet-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-emerald-500 text-white hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-400/50 shadow-lg shrink-0"
           title="Start voice design"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
         </button>
