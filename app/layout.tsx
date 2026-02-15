@@ -40,6 +40,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${archivo.variable} ${lora.variable} ${playfair.variable} ${instrumentSerif.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
         <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" async></script>
