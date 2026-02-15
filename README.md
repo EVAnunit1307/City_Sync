@@ -124,8 +124,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 | Traffic | A* pathfinding, spatial grid collision, signal coordination |
 | Export | GLB (3D model), GeoJSON (geospatial) |
 
---- 
-
+---
+ 
 ## Team
 
 - **Evan Liem**
