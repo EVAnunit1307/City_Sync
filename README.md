@@ -38,8 +38,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 
 ```bash
 git clone https://github.com/EVAnunit1307/CHD_city_pathing.git
-cd CHD_city_pathing 
-npm install
+cd CHD_city_pathing
+npm install 
 ```
 
 ### Environment Variables
