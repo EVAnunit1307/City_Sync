@@ -12,23 +12,23 @@ export const LAND_PER_UNIT_M2 = {
   "Mid-rise": [40, 80],
 } as const;
 
-/** Configurable: $ CAD per acre (Markham proxy) */
+/** Configurable: $ CAD per acre (Markham GTA proxy, demo-safe high range) */
 export const LAND_COST_PER_ACRE_CAD = {
-  low: 2_000_000,
-  high: 8_000_000,
+  low: 6_000_000,
+  high: 25_000_000,
 } as const;
 
-/** Construction cost per unit ($ CAD): [low, high] by type */
+/** Construction cost per unit ($ CAD): [low, high] by type (hard cost proxy) */
 export const CONSTRUCTION_COST_PER_UNIT_CAD = {
-  Detached: [450_000, 900_000],
-  Townhouse: [350_000, 700_000],
-  "Mid-rise": [300_000, 600_000],
+  Detached: [900_000, 1_800_000],
+  Townhouse: [650_000, 1_200_000],
+  "Mid-rise": [550_000, 1_100_000],
 } as const;
 
 /** Soft costs as fraction of construction subtotal */
-export const SOFT_COSTS_FRACTION = 0.2;
+export const SOFT_COSTS_FRACTION = 0.3;
 /** Contingency as fraction of (land + construction + soft) */
-export const CONTINGENCY_FRACTION = 0.1;
+export const CONTINGENCY_FRACTION = 0.15;
 
 /** Timeline: approvals/design months [low, high] */
 const PHASE_APPROVALS_MONTHS: [number, number] = [6, 12];

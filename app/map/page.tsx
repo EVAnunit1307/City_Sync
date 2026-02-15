@@ -12,6 +12,7 @@ import {
   Upload,
   ClipboardList,
   Map,
+  DollarSign,
 } from "lucide-react";
 import { MinimalToggle } from "@/components/ui/minimal-toggle";
 import { prefetchMapData } from "@/lib/prefetchMapData";
@@ -26,6 +27,7 @@ import {
   type BuildingPlacementDetails,
 } from "@/components/BuildingPlacementForm";
 import VoiceCopilot from "@/components/VoiceCopilot";
+import { estimateFinanceExecution } from "@/lib/financeExecution";
 
 interface PlacedBuilding {
   id: string;
@@ -99,6 +101,10 @@ function MapPageContent() {
   const [zoningRotationY, setZoningRotationY] = useState(180);
   const [zoningFlipH, setZoningFlipH] = useState(true);
   const [showEnvironmentalReport, setShowEnvironmentalReport] = useState(false);
+  /** Override unit count for finance estimate (e.g. when 1 placed building represents a 12‑unit subdivision). */
+  const [unitCountOverride, setUnitCountOverride] = useState<number | null>(null);
+  /** Mix from editor Export to Map URL (detached/townhouse/midrise counts) for finance estimator. */
+  const [scenarioMix, setScenarioMix] = useState<{ detached: number; townhouse: number; midrise: number } | null>(null);
   const [debugOverlayVisible, setDebugOverlayVisible] = useState(false);
   const [dashboardVisible, setDashboardVisible] = useState(false);
   const [placementError, setPlacementError] = useState<string | null>(null);
@@ -163,17 +169,34 @@ function MapPageContent() {
     fetchAvailableBuildings();
   }, []);
 
-  // Check for imported building from editor
+  // Check for imported building from editor + optional units/mix from subdivision batch
   useEffect(() => {
     const buildingId = searchParams.get("buildingId");
+    const unitsParam = searchParams.get("units");
+    const detachedParam = searchParams.get("detached");
+    const townhouseParam = searchParams.get("townhouse");
+    const midriseParam = searchParams.get("midrise");
+
     if (buildingId) {
       const modelPath = `/api/editor/building/${buildingId}`;
       setCustomModelPath(modelPath);
       setImportedBuildingName("Custom Building from Editor");
       setIsPlacementMode(true);
-      // Update scale for custom buildings (default to 15x, user can adjust with slider)
       setBuildingScale({ x: 15, y: 15, z: 15 });
       console.log(`✅ Imported building from editor: ${modelPath}`);
+    }
+
+    if (unitsParam != null) {
+      const u = parseInt(unitsParam, 10);
+      if (!Number.isNaN(u) && u >= 1) setUnitCountOverride(u);
+    }
+    if (detachedParam != null && townhouseParam != null && midriseParam != null) {
+      const d = parseInt(detachedParam, 10) || 0;
+      const t = parseInt(townhouseParam, 10) || 0;
+      const m = parseInt(midriseParam, 10) || 0;
+      if (d + t + m > 0) setScenarioMix({ detached: d, townhouse: t, midrise: m });
+    } else {
+      setScenarioMix(null);
     }
   }, [searchParams]);
 
@@ -225,7 +248,7 @@ function MapPageContent() {
         durationDays: details.durationDays,
       },
     };
-    setPlacedBuildings([...placedBuildings, newBuilding]);
+    setPlacedBuildings((prev) => [...prev, newBuilding]);
     setPendingPlacement(null);
     setIsPlacementMode(false);
     setTimelineDate(details.startDate);
@@ -242,7 +265,7 @@ function MapPageContent() {
   };
 
   const removeBuilding = (id: string) => {
-    setPlacedBuildings(placedBuildings.filter((b) => b.id !== id));
+    setPlacedBuildings((prev) => prev.filter((b) => b.id !== id));
     if (selectedBuildingId === id) {
       setSelectedBuildingId(null);
     }
@@ -250,8 +273,8 @@ function MapPageContent() {
 
   const updateSelectedBuilding = (updates: Partial<PlacedBuilding>) => {
     if (!selectedBuildingId) return;
-    setPlacedBuildings(
-      placedBuildings.map((b) =>
+    setPlacedBuildings((prev) =>
+      prev.map((b) =>
         b.id === selectedBuildingId ? { ...b, ...updates } : b,
       ),
     );
@@ -273,6 +296,26 @@ function MapPageContent() {
       );
     });
   }, [placedBuildings, timelineDate]);
+
+  const { financeExecution, totalUnits, effectiveUnits } = useMemo(() => {
+    const totalUnits = placedBuildings.reduce(
+      (sum, b) => sum + (("units" in b && typeof (b as PlacedBuilding & { units?: number }).units === "number") ? (b as PlacedBuilding & { units?: number }).units! : 1),
+      0
+    );
+    const effectiveUnits = unitCountOverride != null && unitCountOverride > 0 ? unitCountOverride : totalUnits;
+    if (effectiveUnits === 0) return { financeExecution: null as ReturnType<typeof estimateFinanceExecution> | null, totalUnits: 0, effectiveUnits: 0 };
+    const input: Parameters<typeof estimateFinanceExecution>[0] = { unitCount: effectiveUnits };
+    if (scenarioMix && (scenarioMix.detached + scenarioMix.townhouse + scenarioMix.midrise) > 0) {
+      input.detached = scenarioMix.detached;
+      input.townhouse = scenarioMix.townhouse;
+      input.midrise = scenarioMix.midrise;
+    }
+    return {
+      financeExecution: estimateFinanceExecution(input),
+      totalUnits,
+      effectiveUnits,
+    };
+  }, [placedBuildings, unitCountOverride, scenarioMix]);
 
   // Timeline range from earliest start to latest end across all placed buildings
   const timelineRange = useMemo(() => {
@@ -469,8 +512,8 @@ function MapPageContent() {
       }
 
       if (updated) {
-        setPlacedBuildings(
-          placedBuildings.map((b) =>
+        setPlacedBuildings((prev) =>
+          prev.map((b) =>
             b.id === selectedBuildingId ? newBuilding : b,
           ),
         );
@@ -815,6 +858,96 @@ function MapPageContent() {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 editor-sidebar-scroll">
+              {/* Finance & Execution — live from scenario (unit count = placed buildings) */}
+              <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
+                <h4 className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-2">
+                  <DollarSign size={14} />
+                  Finance &amp; Execution
+                </h4>
+                {financeExecution ? (
+                  <>
+                    <p className="text-[10px] text-white/50">
+                      Based on {effectiveUnits} unit{effectiveUnits !== 1 ? "s" : ""}
+                      {scenarioMix
+                        ? " (subdivision mix from editor)"
+                        : unitCountOverride == null
+                          ? ` (${placedBuildings.length} building${placedBuildings.length !== 1 ? "s" : ""})`
+                          : " (override)"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] text-white/50 shrink-0">Units for estimate:</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={9999}
+                        placeholder={`${totalUnits}`}
+                        value={unitCountOverride ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value.trim();
+                          if (v === "") {
+                            setUnitCountOverride(null);
+                            return;
+                          }
+                          const n = parseInt(v, 10);
+                          if (!Number.isNaN(n) && n >= 1) setUnitCountOverride(n);
+                        }}
+                        className="w-16 px-2 py-1 rounded bg-white/10 border border-white/20 text-white text-xs font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-white/50">Land required</span>
+                        <span className="text-white font-mono text-right">
+                          {financeExecution.land.required_area_acres} ac ({financeExecution.land.required_area_m2.toLocaleString()} m²)
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-white/50">Land cost</span>
+                        <span className="text-white font-mono text-right">
+                          ${(financeExecution.land.cost_range_cad.low / 1_000_000).toFixed(1)}M – ${(financeExecution.land.cost_range_cad.high / 1_000_000).toFixed(1)}M
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-white/50">Construction</span>
+                        <span className="text-white font-mono text-right">
+                          ${(financeExecution.construction.cost_range_cad.low / 1_000_000).toFixed(1)}M – ${(financeExecution.construction.cost_range_cad.high / 1_000_000).toFixed(1)}M
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2 pt-1 border-t border-white/10">
+                        <span className="text-white/70 font-semibold">Total project</span>
+                        <span className="text-emerald-400 font-mono font-semibold text-right">
+                          ${(financeExecution.total_project_cost.low / 1_000_000).toFixed(1)}M – ${(financeExecution.total_project_cost.high / 1_000_000).toFixed(1)}M
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-white/50">Timeline</span>
+                        <span className="text-white font-mono text-right">
+                          {financeExecution.execution_timeline.estimated_months_low}–{financeExecution.execution_timeline.estimated_months_high} mo
+                          {financeExecution.execution_timeline.estimated_months_high >= 12 && (
+                            <span className="text-white/60 ml-0.5">
+                              ({(financeExecution.execution_timeline.estimated_months_low / 12).toFixed(1)}–{(financeExecution.execution_timeline.estimated_months_high / 12).toFixed(1)} yr)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <details className="text-[10px] text-white/40">
+                      <summary className="cursor-pointer hover:text-white/60">Phases</summary>
+                      <ul className="mt-1.5 space-y-0.5 pl-1">
+                        {financeExecution.execution_timeline.phases.map((p) => (
+                          <li key={p.name} className="flex justify-between gap-2">
+                            <span>{p.name}</span>
+                            <span className="tabular-nums">{p.months} mo</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </>
+                ) : (
+                  <p className="text-xs text-white/40">Place buildings to see cost &amp; timeline estimates.</p>
+                )}
+              </div>
+
               <div>
                 <button
                   onClick={() => setShowEnvironmentalReport(true)}

@@ -41,40 +41,7 @@ interface ReportTabContentProps {
 function ReportTabContent({ sceneRef }: ReportTabContentProps) {
   const { buildings } = useBuildings();
   const router = useRouter();
-  const [exporting, setExporting] = useState(false);
   const [exportingToMap, setExportingToMap] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleExportGLB = async () => {
-    if (!sceneRef.current) {
-      alert('Scene not ready for export');
-      return;
-    }
-    setExporting(true);
-    try {
-      await exportMultiBuildingsToGLB(sceneRef.current);
-      alert(`Exported ${buildings.length} building${buildings.length !== 1 ? 's' : ''} as GLB`);
-    } catch (e) {
-      console.error(e);
-      alert('Export failed');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportJSON = () => {
-    exportMultiBuildingsToJSON(buildings);
-  };
-
-  const handleCopyJSON = async () => {
-    try {
-      await copyMultiBuildingsToClipboard(buildings);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('Copy failed');
-    }
-  };
 
   const handleExportToMap = async () => {
     if (!sceneRef.current || buildings.length === 0) {
@@ -84,7 +51,16 @@ function ReportTabContent({ sceneRef }: ReportTabContentProps) {
     setExportingToMap(true);
     try {
       const { id } = await exportToMap(sceneRef.current, 'custom-building');
-      router.push(`/map?buildingId=${id}`);
+      const detached = buildings.filter((b) => b.buildingType === 'detached').length;
+      const townhouse = buildings.filter((b) => b.buildingType === 'townhouse').length;
+      const midrise = buildings.filter((b) => b.buildingType === 'midrise').length;
+      const params = new URLSearchParams({ buildingId: id, units: String(buildings.length) });
+      if (detached + townhouse + midrise > 0) {
+        params.set('detached', String(detached));
+        params.set('townhouse', String(townhouse));
+        params.set('midrise', String(midrise));
+      }
+      router.push(`/map?${params.toString()}`);
     } catch (e) {
       console.error(e);
       alert('Export to map failed');
@@ -102,31 +78,6 @@ function ReportTabContent({ sceneRef }: ReportTabContentProps) {
         {buildings.length} building{buildings.length !== 1 ? 's' : ''} in scene
       </p>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={handleExportGLB}
-          disabled={exporting}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/10 text-white hover:bg-white/20 border border-white/20 disabled:opacity-60 transition-all"
-        >
-          <Download size={14} />
-          {exporting ? 'Exporting…' : 'Download GLB'}
-        </button>
-        <button
-          type="button"
-          onClick={handleExportJSON}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 transition-all"
-        >
-          <Download size={14} />
-          JSON
-        </button>
-        <button
-          type="button"
-          onClick={handleCopyJSON}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 transition-all"
-        >
-          <Copy size={14} />
-          {copied ? 'Copied!' : 'Copy JSON'}
-        </button>
         <button
           type="button"
           onClick={handleExportToMap}

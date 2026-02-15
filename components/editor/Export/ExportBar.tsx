@@ -27,8 +27,16 @@ export function ExportBar({ sceneRef }: ExportBarProps) {
     setExportingToMap(true);
     try {
       const { id } = await exportToMap(sceneRef.current, 'custom-building');
-      // Navigate to map with the building ID
-      router.push(`/map?buildingId=${id}`);
+      const detached = buildings.filter((b) => b.buildingType === 'detached').length;
+      const townhouse = buildings.filter((b) => b.buildingType === 'townhouse').length;
+      const midrise = buildings.filter((b) => b.buildingType === 'midrise').length;
+      const params = new URLSearchParams({ buildingId: id, units: String(buildings.length) });
+      if (detached + townhouse + midrise > 0) {
+        params.set('detached', String(detached));
+        params.set('townhouse', String(townhouse));
+        params.set('midrise', String(midrise));
+      }
+      router.push(`/map?${params.toString()}`);
     } catch (error) {
       console.error('Export to map failed:', error);
       alert('Failed to export to map. Check console for details.');

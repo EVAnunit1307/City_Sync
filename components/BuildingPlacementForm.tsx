@@ -68,7 +68,7 @@ export function BuildingPlacementForm({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white text-slate-900 rounded-xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building2 className="text-accent-blue" size={20} />
@@ -102,7 +102,7 @@ export function BuildingPlacementForm({
             <select
               value={zoneType}
               onChange={(e) => setZoneType(e.target.value as MarkhamZoneCode)}
-              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue bg-white"
+              className="w-full px-3 py-2.5 text-sm text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue bg-white"
             >
               {categories.map((cat) => (
                 <optgroup key={cat} label={cat}>
@@ -140,7 +140,7 @@ export function BuildingPlacementForm({
               max={1095}
               value={durationDays}
               onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || 1)}
-              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue"
+              className="w-full px-3 py-2.5 text-sm text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue bg-white"
             />
           </div>
 
@@ -153,7 +153,7 @@ export function BuildingPlacementForm({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue"
+              className="w-full px-3 py-2.5 text-sm text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent-blue focus:border-accent-blue bg-white"
             />
           </div>
 

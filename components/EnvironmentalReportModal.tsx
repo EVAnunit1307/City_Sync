@@ -24,8 +24,6 @@ import {
 import type { ImpactReportComputed } from "@/app/api/environmental-report/route";
 import type { RequiredUpgradesOutput } from "@/lib/requiredUpgrades";
 import type { OptimizationMemo } from "@/lib/optimizeMemoTypes";
-import type { FinanceExecutionOutput } from "@/lib/financeExecution";
-
 interface PlacedBuilding {
   id: string;
   lat: number;
@@ -98,7 +96,6 @@ export default function EnvironmentalReportModal({
   const [report, setReport] = useState<EnvironmentalReport | null>(null);
   const [computed, setComputed] = useState<ImpactReportComputed | null>(null);
   const [requiredUpgrades, setRequiredUpgrades] = useState<RequiredUpgradesOutput | null>(null);
-  const [financeExecution, setFinanceExecution] = useState<FinanceExecutionOutput | null>(null);
   const [reportSnapshotDate, setReportSnapshotDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +134,6 @@ export default function EnvironmentalReportModal({
       setReport(data.report);
       setComputed(data.computed ?? null);
       setRequiredUpgrades(data.requiredUpgrades ?? null);
-      setFinanceExecution(data.financeExecution ?? null);
       setReportSnapshotDate(data.snapshotDate ?? snapshot?.timelineDate ?? null);
       setOptimizationResult(null);
     } catch (err) {
@@ -597,93 +593,6 @@ END OF REPORT
                 </section>
               )}
 
-              {/* Finance & Execution — subdivision cost + timeline (rules-based) */}
-              {financeExecution && (
-                <section>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Wrench size={14} />
-                    Finance &amp; Execution
-                  </h3>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Land required</p>
-                        <p className="text-sm font-semibold text-slate-800">
-                          {financeExecution.land.required_area_m2.toLocaleString()} m² ({financeExecution.land.required_area_acres} acres)
-                        </p>
-                        <p className="text-xs text-slate-600 mt-1">
-                          Cost: ${(financeExecution.land.cost_range_cad.low / 1_000_000).toFixed(2)}M – ${(financeExecution.land.cost_range_cad.high / 1_000_000).toFixed(2)}M CAD
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Construction cost</p>
-                        <p className="text-sm font-semibold text-slate-800">
-                          ${(financeExecution.construction.cost_range_cad.low / 1_000_000).toFixed(2)}M – ${(financeExecution.construction.cost_range_cad.high / 1_000_000).toFixed(2)}M CAD
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Construction by type</p>
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-200 text-left text-slate-500">
-                            <th className="py-1.5 pr-2">Type</th>
-                            <th className="py-1.5 pr-2 text-right">Units</th>
-                            <th className="py-1.5 pr-2 text-right">$/unit</th>
-                            <th className="py-1.5 text-right">Subtotal</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {financeExecution.construction.breakdown.map((row) => (
-                            <tr key={row.type} className="border-b border-slate-100 last:border-0">
-                              <td className="py-1.5 pr-2 text-slate-700">{row.type}</td>
-                              <td className="py-1.5 pr-2 text-right text-slate-600">{row.units}</td>
-                              <td className="py-1.5 pr-2 text-right text-slate-600">
-                                ${(row.cost_per_unit_low / 1000).toFixed(0)}k – ${(row.cost_per_unit_high / 1000).toFixed(0)}k
-                              </td>
-                              <td className="py-1.5 text-right text-slate-700">
-                                ${(row.subtotal_low / 1_000_000).toFixed(2)}M – ${(row.subtotal_high / 1_000_000).toFixed(2)}M
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Total project cost (land + construction + soft + contingency)</p>
-                      <p className="text-base font-bold text-slate-900">
-                        ${(financeExecution.total_project_cost.low / 1_000_000).toFixed(2)}M – ${(financeExecution.total_project_cost.high / 1_000_000).toFixed(2)}M CAD
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-1">Includes: {financeExecution.total_project_cost.includes.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Execution timeline</p>
-                      <p className="text-sm font-semibold text-slate-800 mb-2">
-                        {financeExecution.execution_timeline.estimated_months_low} – {financeExecution.execution_timeline.estimated_months_high} months
-                        {financeExecution.execution_timeline.estimated_months_high >= 12 && (
-                          <span className="text-slate-600 font-normal ml-1">
-                            ({(financeExecution.execution_timeline.estimated_months_low / 12).toFixed(1)} – {(financeExecution.execution_timeline.estimated_months_high / 12).toFixed(1)} years)
-                          </span>
-                        )}
-                      </p>
-                      <ul className="space-y-1 text-xs text-slate-600">
-                        {financeExecution.execution_timeline.phases.map((p) => (
-                          <li key={p.name} className="flex justify-between gap-2">
-                            <span>{p.name}</span>
-                            <span className="tabular-nums">{p.months} mo</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {financeExecution.execution_timeline.assumptions.length > 0 && (
-                        <p className="text-[10px] text-slate-500 mt-2 italic">
-                          {financeExecution.execution_timeline.assumptions[0]}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </section>
-              )}
-
               {/* Nearby York Region Projects — from CSV data */}
               <section>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -808,26 +717,6 @@ END OF REPORT
                 </ol>
               </section>
 
-              {/* Optimize for me — calls /api/optimize for detailed memo */}
-              <section className="pt-2">
-                <button
-                  type="button"
-                  onClick={runOptimize}
-                  disabled={optimizeLoading}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-medium transition-colors"
-                >
-                  {optimizeLoading ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Wrench size={16} />
-                  )}
-                  {optimizeLoading ? "Generating…" : "Optimize for me"}
-                </button>
-                {optimizeError && (
-                  <p className="text-xs text-red-600 mt-2">{optimizeError}</p>
-                )}
-              </section>
-
               {/* Required Upgrades — rules-based, no AI */}
               {requiredUpgrades?.required_upgrades && requiredUpgrades.required_upgrades.length > 0 && (
                 <section>
@@ -885,148 +774,6 @@ END OF REPORT
                       </div>
                     ))}
                   </div>
-                </section>
-              )}
-
-              {/* Optimization Memo — from /api/optimize (Gemini + evidence) or fallback */}
-              {optimizationResult && (
-                <section className="border-t border-slate-200 pt-6 mt-6">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Wrench size={14} />
-                    Optimization Memo
-                  </h3>
-                  {optimizationResult.useFallback && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 mb-4 text-sm text-amber-800">
-                      Optimization memo could not be generated; showing rules-based required upgrades below.
-                    </div>
-                  )}
-                  {optimizationResult.memo ? (
-                    <div className="space-y-5">
-                      <p className="text-sm text-slate-700 leading-relaxed">{optimizationResult.memo.summary}</p>
-                      {optimizationResult.memo.site_context && (
-                        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
-                          <p className="text-xs font-semibold text-slate-600">Context</p>
-                          <p className="text-xs text-slate-600">{optimizationResult.memo.site_context.location}</p>
-                          {optimizationResult.memo.site_context.construction_constraints?.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Construction</p>
-                              <ul className="space-y-1 text-xs text-slate-700">
-                                {optimizationResult.memo.site_context.construction_constraints.map((c, i) => (
-                                  <li key={i}>{c.name} ({c.distance_km?.toFixed(1)} km) — {c.why_it_matters}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {optimizationResult.memo.site_context.transit_context?.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Transit</p>
-                              <ul className="space-y-1 text-xs text-slate-700">
-                                {optimizationResult.memo.site_context.transit_context.map((t, i) => (
-                                  <li key={i}>{t.route} — {t.relevance}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {(optimizationResult.memo.site_context.sources?.length > 0 || optimizationResult.sources?.length > 0) && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Sources</p>
-                              <ul className="space-y-1.5 text-xs">
-                                {(optimizationResult.memo.site_context.sources?.length ? optimizationResult.memo.site_context.sources : optimizationResult.sources).map((s, i) => (
-                                  <li key={i}>
-                                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-medium">{s.title}</a>
-                                    <span className="text-slate-500"> — {s.snippet.slice(0, 120)}…</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {optimizationResult.memo.diagnosis && (
-                        <div className="rounded-xl border border-slate-200 p-4 space-y-2">
-                          <p className="text-xs font-semibold text-slate-600">Diagnosis</p>
-                          {optimizationResult.memo.diagnosis.why_traffic_is_high?.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Traffic</p>
-                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
-                                {optimizationResult.memo.diagnosis.why_traffic_is_high.map((b, i) => <li key={i}>{b}</li>)}
-                              </ul>
-                            </div>
-                          )}
-                          {optimizationResult.memo.diagnosis.why_transit_is_high_or_low?.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Transit</p>
-                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
-                                {optimizationResult.memo.diagnosis.why_transit_is_high_or_low.map((b, i) => <li key={i}>{b}</li>)}
-                              </ul>
-                            </div>
-                          )}
-                          {optimizationResult.memo.diagnosis.why_infrastructure_is_high?.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Infrastructure</p>
-                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
-                                {optimizationResult.memo.diagnosis.why_infrastructure_is_high.map((b, i) => <li key={i}>{b}</li>)}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {optimizationResult.memo.recommended_actions?.length > 0 && (
-                        <div className="space-y-4">
-                          <p className="text-xs font-semibold text-slate-600">Recommended actions</p>
-                          {["Now (0-1y)", "Mid (1-3y)", "Long (3-7y)"].map((horizon) => {
-                            const actions = optimizationResult.memo!.recommended_actions.filter((a) => a.horizon === horizon);
-                            if (actions.length === 0) return null;
-                            return (
-                              <div key={horizon} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                                <div className="px-3 py-2 bg-slate-100 text-xs font-bold text-slate-600 uppercase">
-                                  {horizon}
-                                </div>
-                                <div className="p-3 space-y-3">
-                                  {actions.map((a, i) => (
-                                    <div key={i} className="border-b border-slate-100 last:border-0 pb-3 last:pb-0">
-                                      <p className="text-sm font-semibold text-slate-800">{a.action_title}</p>
-                                      <p className="text-xs text-slate-600 mt-1">{a.details}</p>
-                                      <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-slate-500">
-                                        {a.expected_metric_effect && (
-                                          <>
-                                            <span>Traffic: {a.expected_metric_effect.traffic}</span>
-                                            <span>Transit: {a.expected_metric_effect.transit_accessibility}</span>
-                                            <span>Infra: {a.expected_metric_effect.infrastructure}</span>
-                                            <span>Financial: {a.expected_metric_effect.financial}</span>
-                                          </>
-                                        )}
-                                      </div>
-                                      <p className="text-[10px] text-slate-500 mt-1">Owner: {a.owner}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : optimizationResult.requiredUpgrades?.required_upgrades?.length ? (
-                    <div className="space-y-3">
-                      {optimizationResult.requiredUpgrades.required_upgrades.map((u) => (
-                        <div key={u.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                            <h4 className="text-sm font-semibold text-slate-800">{u.title}</h4>
-                            <span
-                              className={`shrink-0 px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                                u.severity === "Major" ? "bg-red-100 text-red-700" : u.severity === "Moderate" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
-                              }`}
-                            >
-                              {u.severity}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500">{u.category} · {u.trigger}</p>
-                          <p className="text-xs text-slate-600 mt-1">Owner: {u.suggested_owner}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
                 </section>
               )}
             </div>
