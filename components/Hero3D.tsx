@@ -16,15 +16,6 @@ interface BoardSceneProps {
 // Board base with grid overlay and simulation indicators
 function BoardBase() {
   const gridRef = useRef<THREE.Mesh>(null);
-  const pulseRef = useRef<THREE.Mesh>(null);
-  
-  useFrame(({ clock }) => {
-    // Subtle pulsing animation for transit nodes
-    if (pulseRef.current) {
-      const pulse = Math.sin(clock.getElapsedTime() * 2) * 0.5 + 0.5;
-      pulseRef.current.scale.setScalar(0.3 + pulse * 0.2);
-    }
-  });
   
   return (
     <group position={[0, 0, 0]}>
@@ -36,16 +27,6 @@ function BoardBase() {
           transparent 
           opacity={0.03}
           wireframe 
-        />
-      </mesh>
-      
-      {/* Pulsing transit node indicator */}
-      <mesh ref={pulseRef} position={[1.5, 0.1, 0]}>
-        <circleGeometry args={[0.15, 16]} />
-        <meshBasicMaterial 
-          color="#7b68ee" 
-          transparent 
-          opacity={0.6}
         />
       </mesh>
       
@@ -76,10 +57,12 @@ function TorontoModel({ mouseX, mouseY }: BoardSceneProps) {
   
   useEffect(() => {
     if (gltf.scene) {
-      // Improved materials with better contrast
+      // Improved materials with better contrast and shadows
       gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
           if (mesh.material) {
             const material = mesh.material as THREE.MeshStandardMaterial;
             // Lighter, more contrasted materials
@@ -152,14 +135,29 @@ function Scene({ mouseX, mouseY }: BoardSceneProps) {
         ref={cameraRef}
         makeDefault
         position={[0, 8, 8]}
-        fov={50}
+        fov={48}
       />
       
-      {/* Enhanced lighting from top-left with better contrast */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[-10, 12, 8]} intensity={1.2} color="#ffffff" />
-      <directionalLight position={[5, 8, -5]} intensity={0.6} color="#d0d0ff" />
-      <pointLight position={[0, 5, 0]} intensity={0.3} color="#7b68ee" />
+      {/* Enhanced lighting with shadows for better quality */}
+      <ambientLight intensity={0.5} />
+      <hemisphereLight args={[0xffffff, 0xe8ecf0, 0.4]} />
+      <directionalLight 
+        position={[-10, 15, 8]} 
+        intensity={1.0} 
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
+        shadow-camera-near={0.5}
+        shadow-camera-far={50}
+        shadow-bias={-0.0001}
+      />
+      <directionalLight position={[5, 10, -5]} intensity={0.5} color="#d0d0ff" />
+      <pointLight position={[0, 8, 0]} intensity={0.2} color="#7b68ee" />
       
       {/* Board base plate */}
       <BoardBase />
@@ -195,7 +193,15 @@ export function Hero3D() {
 
       {/* 3D Canvas - Full Screen */}
       <div className="hero-board-canvas">
-        <Canvas>
+        <Canvas
+          shadows
+          gl={{
+            antialias: true,
+            alpha: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.2,
+          }}
+        >
           <Scene mouseX={mousePosition.x} mouseY={mousePosition.y} />
         </Canvas>
       </div>
