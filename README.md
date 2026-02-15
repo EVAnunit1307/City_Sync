@@ -3,8 +3,8 @@
 A 3D digital twin platform that allows city planners to test housing proposals inside an existing neighborhood and instantly see projected impacts on traffic congestion, transit load, infrastructure strain, and financial feasibility.
 
 ---
- 
-## Overview
+
+## Overview 
 
 GrowthSync re-engineers traditional planning review by transforming static development reports into an interactive, scenario-based simulation tool. Instead of reviewing consultant PDFs after the fact, planners can model impacts immediately.
 
