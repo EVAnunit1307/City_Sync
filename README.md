@@ -120,8 +120,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 | AI | Google Gemini 2.5 Flash |
 | Voice/Audio | ElevenLabs TTS + Sound Generation, Web Speech API |
 | Validation | Zod |
-| Geospatial | Turf.js, Web Mercator projection, OpenStreetMap | 
-| Traffic | A* pathfinding, spatial grid collision, signal coordination |
+| Geospatial | Turf.js, Web Mercator projection, OpenStreetMap |
+| Traffic | A* pathfinding, spatial grid collision, signal coordination | 
 | Export | GLB (3D model), GeoJSON (geospatial) |
 
 ---
