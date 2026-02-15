@@ -16,8 +16,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 
 - **3D Digital Twin** - Real-time rendering of 4,600+ buildings, roads, and transit infrastructure in the Toronto area
 - **Voice-Driven Planning** - Describe developments naturally: *"Add 800 mixed units near transit with 20% townhouses"*
-- **Transportation Impact** - Peak hour trip generation, congestion scoring per road segment, color-coded road load visualization 
-- **Transit Load Analysis** - Population-based rider projections against route capacity with overload indicators
+- **Transportation Impact** - Peak hour trip generation, congestion scoring per road segment, color-coded road load visualization
+- **Transit Load Analysis** - Population-based rider projections against route capacity with overload indicators 
 - **Infrastructure Index** - Composite scoring across water, sewer, school capacity, and parkland ratio
 - **Financial Projections** - Developer build cost, municipal servicing cost, and development charge recovery estimates
 - **AI Constraint Explanation** - Ask *"Why did congestion spike?"* and get causal analysis
