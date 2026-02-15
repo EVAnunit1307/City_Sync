@@ -80,8 +80,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
                                                3D Building Editor (Three.js)
                                                + AI Sound Effects (ElevenLabs)
                                                        |
-                                               3D City Map (traffic, transit, zoning) 
-                                                       |
+                                               3D City Map (traffic, transit, zoning)
+                                                       | 
                                /api/environmental-report --> Impact Analysis (Gemini)
                                /api/tree-advisor --> Species Recommendations (Gemini)
 ```
