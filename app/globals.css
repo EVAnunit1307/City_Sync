@@ -2290,7 +2290,7 @@ h3,
 
 .tech-carousel-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 0.75rem;
   padding: 0 2rem;
