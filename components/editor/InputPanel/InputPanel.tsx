@@ -13,11 +13,12 @@ import { SubdivisionPanel } from './SubdivisionPanel';
 import { BatchSettings } from './BatchSettings';
 import { DEFAULT_BUILDING_SPEC } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_BATCH_CONFIG, type BatchConfig } from '@/lib/editor/utils/buildingCluster';
-import { exportMultiBuildingsToGLB, exportMultiBuildingsToJSON, copyMultiBuildingsToClipboard, exportToMap } from '@/lib/editor/utils/exportUtils';
-import { ChevronDown, ChevronRight, Building2, BarChart3, FileText, Download, Copy, MapPin } from 'lucide-react';
+import { SHOW_SINGLE_BUILDING_ADD_UI } from '@/lib/editor/config';
+import { exportToMap } from '@/lib/editor/utils/exportUtils';
+import { ChevronDown, ChevronRight, Building2, FileText, MapPin } from 'lucide-react';
 
 type SettingsTab = 'transform' | 'dimensions' | 'textures' | 'windows';
-type MainTab = 'build' | 'impacts' | 'report';
+type MainTab = 'build' | 'report';
 
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'transform', label: 'Transform' },
@@ -28,7 +29,6 @@ const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ReactNode }[] = [
   { id: 'build', label: 'Build', icon: <Building2 size={16} /> },
-  { id: 'impacts', label: 'Impacts', icon: <BarChart3 size={16} /> },
   { id: 'report', label: 'Report', icon: <FileText size={16} /> },
 ];
 
@@ -41,40 +41,7 @@ interface ReportTabContentProps {
 function ReportTabContent({ sceneRef }: ReportTabContentProps) {
   const { buildings } = useBuildings();
   const router = useRouter();
-  const [exporting, setExporting] = useState(false);
   const [exportingToMap, setExportingToMap] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleExportGLB = async () => {
-    if (!sceneRef.current) {
-      alert('Scene not ready for export');
-      return;
-    }
-    setExporting(true);
-    try {
-      await exportMultiBuildingsToGLB(sceneRef.current);
-      alert(`Exported ${buildings.length} building${buildings.length !== 1 ? 's' : ''} as GLB`);
-    } catch (e) {
-      console.error(e);
-      alert('Export failed');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportJSON = () => {
-    exportMultiBuildingsToJSON(buildings);
-  };
-
-  const handleCopyJSON = async () => {
-    try {
-      await copyMultiBuildingsToClipboard(buildings);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('Copy failed');
-    }
-  };
 
   const handleExportToMap = async () => {
     if (!sceneRef.current || buildings.length === 0) {
@@ -182,10 +149,6 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
     setBuildAccordion(key);
   }, []);
 
-  const units = buildings.length;
-  const congestion = '—';
-  const transitLoad = '—';
-
   return (
     <div className="w-full flex flex-col min-h-0">
       {/* Main tabs - dark theme */}
@@ -229,6 +192,7 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
                   batchConfig={batchConfig}
                   setBatchConfig={setBatchConfig}
                   hideBatchSliders
+                  showSingleBuildingAddUI={SHOW_SINGLE_BUILDING_ADD_UI}
                 />
               </div>
 
@@ -250,6 +214,7 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
             </>
           )}
 
+<<<<<<< HEAD
           {mainTab === 'impacts' && (
             <div className="editor-section-animate group relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
               {/* Corner brackets on hover */}

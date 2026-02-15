@@ -37,9 +37,11 @@ export interface BuildingListProps {
   setBatchConfig?: React.Dispatch<React.SetStateAction<BatchConfig>>;
   /** When true, hide the inline batch sliders (use Batch Settings accordion instead). */
   hideBatchSliders?: boolean;
+  /** When false, only the "Buildings" header and "+ Add" button are hidden. Group and Place Subdivision (Batch) stay visible. */
+  showSingleBuildingAddUI?: boolean;
 }
 
-export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: setBatchConfigProp, hideBatchSliders }: BuildingListProps = {}) {
+export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: setBatchConfigProp, hideBatchSliders, showSingleBuildingAddUI = false }: BuildingListProps = {}) {
   const {
     buildings,
     selectedBuildingId,
@@ -97,6 +99,9 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
+        {showSingleBuildingAddUI && (
+          <h3 className="text-lg font-semibold text-white">Buildings</h3>
+        )}
         <div className="flex gap-2">
           <CurtainButton
             text={mergeMode ? 'Cancel' : 'Group'}
@@ -113,13 +118,15 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
             size="default"
             title={`Enter batch mode: click grid to place ${batchConfig.totalBuildings} buildings (${batchConfig.mix.detachedPct}% detached, ${batchConfig.mix.townhousePct}% townhouse, ${batchConfig.mix.midrisePct}% mid-rise)`}
           />
-          <CurtainButton
-            text={placementMode ? 'Click Grid...' : '+ Add'}
-            onClick={handleAddBuilding}
-            isDisabled={placementMode || mergeMode}
-            variant="amber"
-            size="default"
-          />
+          {showSingleBuildingAddUI && (
+            <CurtainButton
+              text={placementMode ? 'Click Grid...' : '+ Add'}
+              onClick={handleAddBuilding}
+              isDisabled={placementMode || mergeMode}
+              variant="amber"
+              size="default"
+            />
+          )}
         </div>
       </div>
 
