@@ -13,44 +13,11 @@ interface BoardSceneProps {
   mouseY: number;
 }
 
-// Board base with just rings - clean, no gridlines
+// Board base - minimal, clean (no rings for clean look)
 function BoardBase() {
   return (
     <group position={[0, 0, 0]}>
-      {/* Contour rings - prominent circular faded rings */}
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <Circle
-          key={`wire-${i}`}
-          args={[1.0 + i * 0.8, 64]}
-          position={[0, 0.01, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <meshBasicMaterial
-            color="#888888"
-            transparent
-            opacity={0.35 - i * 0.04}
-            side={THREE.DoubleSide}
-            wireframe
-          />
-        </Circle>
-      ))}
-      
-      {/* Solid faded rings for background glow effect */}
-      {[0, 1, 2, 3].map((i) => (
-        <Circle
-          key={`solid-${i}`}
-          args={[0.8 + i * 1.2, 64]}
-          position={[0, 0, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <meshBasicMaterial
-            color="#3a3a3a"
-            transparent
-            opacity={0.15 - i * 0.03}
-            side={THREE.DoubleSide}
-          />
-        </Circle>
-      ))}
+      {/* Empty - clean background with no circular shadows */}
     </group>
   );
 }
@@ -81,13 +48,13 @@ function TorontoModel({ mouseX, mouseY }: BoardSceneProps) {
 
   useFrame(() => {
     if (groupRef.current) {
-      // Very gentle parallax rotation - minimal movement for small miniature
-      const targetRotationY = mouseX * 0.03;
+      // More noticeable parallax rotation for better interaction feedback
+      const targetRotationY = mouseX * 0.15;
       
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         targetRotationY,
-        0.06
+        0.1
       );
     }
   });
@@ -106,19 +73,19 @@ function Scene({ mouseX, mouseY }: BoardSceneProps) {
   
   useFrame(() => {
     if (cameraRef.current) {
-      // Very gentle camera tilt based on mouse - subtle board game perspective
-      const targetX = mouseY * 0.15;
-      const targetZ = 8 + mouseX * 0.2;
+      // More dramatic camera movement - increased sensitivity
+      const targetX = mouseY * 1.2;
+      const targetZ = 8 + mouseX * 1.5;
       
       cameraRef.current.position.x = THREE.MathUtils.lerp(
         cameraRef.current.position.x,
         targetX,
-        0.05
+        0.08
       );
       cameraRef.current.position.z = THREE.MathUtils.lerp(
         cameraRef.current.position.z,
         targetZ,
-        0.05
+        0.08
       );
       
       cameraRef.current.lookAt(0, 0, 0);
@@ -188,9 +155,7 @@ export function Hero3D() {
         >
           <p className="hero-board-kicker">reimagine.</p>
           <h1 className="hero-board-title">
-            DIGITAL
-            <br />
-            SUBDIVISION<span className="hero-title-dot">.</span>
+            GrowthSync<span className="hero-title-dot">.</span>
           </h1>
           <p className="hero-board-subtitle">
             A subdivision digital twin for real-time zoning, cost, and mobility impacts.

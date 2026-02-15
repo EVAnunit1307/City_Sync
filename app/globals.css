@@ -285,7 +285,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #d4c5a0;
+  color: #ffffff;
 }
 
 /* 3D Canvas */
@@ -317,7 +317,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: #999;
+  color: #aaaaaa;
   margin: 0 0 0.75rem 0;
 }
 
@@ -327,7 +327,7 @@
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.02em;
-  color: #d4c5a0;
+  color: #ffffff;
   text-transform: uppercase;
   margin: 0 0 1.5rem 0;
 }
@@ -341,7 +341,7 @@
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #888;
+  color: #cccccc;
   margin: 0 0 2.5rem 0;
   max-width: 500px;
 }
@@ -416,13 +416,13 @@
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
-  color: #ff6b4a;
+  color: #7b68ee;
   line-height: 1.6;
   text-transform: uppercase;
 }
 
 .coords-highlight {
-  color: #ff8866;
+  color: #8b78ff;
 }
 
 /* Responsive 3D Hero */
@@ -1444,7 +1444,7 @@ h3,
   text-transform: uppercase;
   letter-spacing: 0.19em;
   font-size: 0.7rem;
-  color: var(--tp-muted);
+  color: #aaaaaa;
 }
 
 .tp-gallery-head h2 {
@@ -1775,7 +1775,7 @@ h3,
   font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(2rem, 4.5vw, 3.5rem);
   font-weight: 600;
-  color: var(--tp-ink);
+  color: #ffffff;
   margin: 1rem 0 1.5rem;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -1783,7 +1783,7 @@ h3,
 
 .tablet-subtitle {
   font-size: clamp(0.95rem, 1.5vw, 1.15rem);
-  color: var(--tp-muted);
+  color: #cccccc;
   max-width: 700px;
   margin: 0 auto;
   line-height: 1.6;
@@ -2152,5 +2152,138 @@ h3,
 
   .hero-board-subtitle {
     font-size: 1rem;
+  }
+}
+
+/* ===== TECH CAROUSEL SECTION ===== */
+.tech-carousel-section {
+  width: 100%;
+  background: #000000;
+  border-top: 1px solid #1a1a1a;
+  padding: 4rem 0 3rem;
+  overflow: hidden;
+}
+
+.tech-carousel-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.tech-carousel-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.tech-carousel-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 2rem;
+  transition: all 0.3s ease;
+}
+
+.tech-carousel-item:hover {
+  transform: translateY(-2px);
+}
+
+.tech-carousel-logo {
+  width: 32px;
+  height: 32px;
+  color: #ffffff;
+  opacity: 0.85;
+  transition: all 0.3s ease;
+}
+
+.tech-carousel-item:hover .tech-carousel-logo {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+}
+
+.tech-carousel-text {
+  font-family: 'Courier New', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0.85;
+  transition: all 0.3s ease;
+}
+
+.tech-carousel-item:hover .tech-carousel-text {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+}
+
+.tech-carousel-item span:last-child {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  opacity: 0.85;
+}
+
+.tech-carousel-item:hover span:last-child {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.carousel-fade-left {
+  position: absolute;
+  inset-y: 0;
+  left: 0;
+  width: 200px;
+  background: linear-gradient(to right, #000000 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.carousel-fade-right {
+  position: absolute;
+  inset-y: 0;
+  right: 0;
+  width: 200px;
+  background: linear-gradient(to left, #000000 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 968px) {
+  .tech-carousel-logo {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .carousel-fade-left,
+  .carousel-fade-right {
+    width: 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tech-carousel-section {
+    padding: 3rem 0 2.5rem;
+  }
+  
+  .tech-carousel-logo {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .tech-carousel-item span:last-child {
+    font-size: 0.75rem;
+  }
+  
+  .carousel-fade-left,
+  .carousel-fade-right {
+    width: 40px;
   }
 }
