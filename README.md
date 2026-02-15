@@ -125,8 +125,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 | Export | GLB (3D model), GeoJSON (geospatial) |
 
 ---
- 
-## Team
+
+## Team 
 
 - **Evan Liem**
 
