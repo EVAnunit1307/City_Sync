@@ -97,8 +97,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 │   ├── editor/             # Building editor (viewport, controls)
 │   └── ThreeMap.tsx        # Main 3D map component
 ├── lib/                    # Core logic
-│   ├── editor/             # Building spec types, geometry builders, randomizer 
-│   ├── traffic/            # Vehicle behavior, collision, signal coordination
+│   ├── editor/             # Building spec types, geometry builders, randomizer
+│   ├── traffic/            # Vehicle behavior, collision, signal coordination 
 │   ├── buildingRenderer.ts # Building rendering with varied facades
 │   ├── projection.ts       # Web Mercator coordinate projection
 │   ├── roadNetwork.ts      # Road graph and A* pathfinding
