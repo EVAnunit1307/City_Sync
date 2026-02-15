@@ -2,17 +2,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 import { getGeminiApiKey, isGeminiConfigured } from '@/lib/geminiEnv';
 import {
-  findProjectsNear,
   getRoutes,
-  filterRoutesActiveOn,
   matchRoutesByCorridor,
   computeTransitAccessibilityScore,
   classifyConstructionConstraint,
   getCorridorsForSite,
   dedupeByRouteId,
   getMatchedCorridorNames,
-  DEFAULT_PROJECT_RADIUS_KM,
+  findProjectsByCorridorKeyword,
+  filterProjectsWithinRadius,
+  REPORT_PROJECT_RADIUS_KM,
 } from '@/lib/impactReportData';
+import { computeRequiredUpgrades } from '@/lib/requiredUpgrades';
 
 interface PlacedBuilding {
   id: string;
@@ -52,7 +53,8 @@ export interface ImpactReportComputed {
     location: string;
     projectSubtype: string;
     status: string;
-    distanceKm: number;
+    /** Distance in km when coords available; null for keyword-only match. */
+    distanceKm: number | null;
     webLink: string;
   }>;
   /** Top routes near site (max 8), active on report date, corridor-matched. */
@@ -146,19 +148,20 @@ Use this to align your impact narrative with the current timeline state where re
     // Site centroid for project/route matching
     const centroidLat = buildings.reduce((s, b) => s + b.lat, 0) / buildings.length;
     const centroidLng = buildings.reduce((s, b) => s + b.lng, 0) / buildings.length;
-    const reportDate = snapshot?.timelineDate ? new Date(snapshot.timelineDate) : new Date();
-
-    const nearbyProjects = findProjectsNear(centroidLat, centroidLng, DEFAULT_PROJECT_RADIUS_KM);
-    const topProjects = nearbyProjects.slice(0, 5);
-    const constructionConstraint = classifyConstructionConstraint(nearbyProjects);
 
     const corridorsForSite = getCorridorsForSite(centroidLat, centroidLng);
+
+    // Routes: no schedule filtering — use all routes, dedupe by ROUTE_ID, match by corridor (top 8)
     const allRoutes = getRoutes();
-    const activeRoutes = filterRoutesActiveOn(allRoutes, reportDate);
-    const dedupedRoutes = dedupeByRouteId(activeRoutes);
+    const dedupedRoutes = dedupeByRouteId(allRoutes);
     const matchedRoutes = matchRoutesByCorridor(dedupedRoutes, corridorsForSite);
     const matchedCorridors = getMatchedCorridorNames(matchedRoutes, corridorsForSite);
     const transitAccessibilityScore = computeTransitAccessibilityScore(matchedRoutes);
+
+    // Projects: keyword match, then strict 5 km cap — only these are shown and passed to Gemini
+    const keywordMatched = findProjectsByCorridorKeyword(centroidLat, centroidLng, corridorsForSite);
+    const topProjects = filterProjectsWithinRadius(keywordMatched, REPORT_PROJECT_RADIUS_KM).slice(0, 8);
+    const constructionConstraint = classifyConstructionConstraint(topProjects);
 
     const nearbyProjectsList = topProjects
       .map(
@@ -179,7 +182,7 @@ Use this to align your impact narrative with the current timeline state where re
         location: p.location,
         projectSubtype: p.projectSubtype,
         status: p.status,
-        distanceKm: p.distanceKm ?? 0,
+        distanceKm: p.distanceKm != null ? p.distanceKm : null,
         webLink: p.webLink || '',
       })),
       nearbyRoutes: matchedRoutes.map((r) => ({
@@ -203,7 +206,7 @@ COMPUTED IMPACT METRICS (use these numbers in your narrative; do not invent othe
 - Construction Constraint: ${constructionConstraint.level} — ${constructionConstraint.summary}
 - Nearby York Region infrastructure/construction projects (from official data; you may ONLY reference these):
 ${nearbyProjectsList}
-- Nearby YRT bus routes (active on report date; use for transit narrative):
+- Nearby YRT bus routes (dataset coverage: schedule dates shown; use for transit narrative):
 ${nearbyRoutesList}
 
 INSTRUCTIONS:
@@ -304,9 +307,20 @@ Respond ONLY with the JSON object, no additional text.`;
       }, { status: 500 });
     }
 
+    const requiredUpgrades = computeRequiredUpgrades({
+      trafficScore: report.trafficScore,
+      transitLoadScore: report.transitLoadScore,
+      transitAccessibilityScore: computed.transitAccessibilityScore,
+      infrastructureIndex: report.infrastructureIndex,
+      financialScore: report.financialScore,
+      nearbyProjectsCount: topProjects.length,
+      matchedCorridors: computed.matchedCorridors,
+    });
+
     return NextResponse.json({
       report,
       computed,
+      requiredUpgrades,
       generatedAt: new Date().toISOString(),
       buildingCount: buildings.length,
       snapshotDate: snapshot?.timelineDate ?? null,

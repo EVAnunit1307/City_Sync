@@ -19,8 +19,11 @@ import {
   FileText,
   Bus,
   Construction,
+  Wrench,
 } from "lucide-react";
 import type { ImpactReportComputed } from "@/app/api/environmental-report/route";
+import type { RequiredUpgradesOutput } from "@/lib/requiredUpgrades";
+import type { OptimizationMemo } from "@/lib/optimizeMemoTypes";
 
 interface PlacedBuilding {
   id: string;
@@ -93,10 +96,19 @@ export default function EnvironmentalReportModal({
 }: EnvironmentalReportModalProps) {
   const [report, setReport] = useState<EnvironmentalReport | null>(null);
   const [computed, setComputed] = useState<ImpactReportComputed | null>(null);
+  const [requiredUpgrades, setRequiredUpgrades] = useState<RequiredUpgradesOutput | null>(null);
   const [reportSnapshotDate, setReportSnapshotDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedBuildingIndex, setSelectedBuildingIndex] = useState(0);
+  const [optimizationResult, setOptimizationResult] = useState<{
+    memo: OptimizationMemo | null;
+    useFallback: boolean;
+    requiredUpgrades: RequiredUpgradesOutput | null;
+    sources: Array<{ title: string; url: string; snippet: string }>;
+  } | null>(null);
+  const [optimizeLoading, setOptimizeLoading] = useState(false);
+  const [optimizeError, setOptimizeError] = useState<string | null>(null);
 
   const generateReport = async () => {
     if (buildings.length === 0) {
@@ -122,11 +134,67 @@ export default function EnvironmentalReportModal({
       const data = await response.json();
       setReport(data.report);
       setComputed(data.computed ?? null);
+      setRequiredUpgrades(data.requiredUpgrades ?? null);
       setReportSnapshotDate(data.snapshotDate ?? snapshot?.timelineDate ?? null);
+      setOptimizationResult(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate report");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runOptimize = async () => {
+    if (!report || !computed || buildings.length === 0) return;
+    setOptimizeLoading(true);
+    setOptimizeError(null);
+    try {
+      const response = await fetch("/api/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buildings: buildings.map((b) => ({ lat: b.lat, lng: b.lng, scale: b.scale })),
+          report: {
+            trafficScore: report.trafficScore,
+            transitLoadScore: report.transitLoadScore,
+            infrastructureIndex: report.infrastructureIndex,
+            financialScore: report.financialScore,
+          },
+          computed: {
+            transitAccessibilityScore: computed.transitAccessibilityScore,
+            nearbyProjects: computed.nearbyProjects,
+            nearbyRoutes: computed.nearbyRoutes,
+            matchedCorridors: computed.matchedCorridors,
+          },
+        }),
+      });
+      if (!response.ok) {
+        let errMsg = "Optimize failed";
+        try {
+          const text = await response.text();
+          try {
+            const err = JSON.parse(text);
+            errMsg = err.error || err.details || errMsg;
+          } catch {
+            if (text) errMsg = text.slice(0, 200);
+            else errMsg = response.statusText || errMsg;
+          }
+        } catch {
+          errMsg = response.statusText || errMsg;
+        }
+        throw new Error(errMsg);
+      }
+      const data = await response.json();
+      setOptimizationResult({
+        memo: data.memo ?? null,
+        useFallback: data.useFallback ?? false,
+        requiredUpgrades: data.requiredUpgrades ?? null,
+        sources: data.sources ?? [],
+      });
+    } catch (err) {
+      setOptimizeError(err instanceof Error ? err.message : "Optimization failed");
+    } finally {
+      setOptimizeLoading(false);
     }
   };
 
@@ -139,9 +207,9 @@ export default function EnvironmentalReportModal({
     const nearbySection =
       computed?.nearbyProjects && computed.nearbyProjects.length > 0
         ? computed.nearbyProjects.map(
-            (p) => `- ${p.projectName} | ${p.distanceKm.toFixed(2)} km | ${p.status} | ${p.projectSubtype}${p.webLink ? ` | ${p.webLink}` : ""}`
+            (p) => `- ${p.projectName} | ${p.distanceKm != null ? `${p.distanceKm.toFixed(2)} km` : "N/A"} | ${p.status} | ${p.projectSubtype}${p.webLink ? ` | ${p.webLink}` : ""}`
           ).join("\n")
-        : "None within range (2 km).";
+        : "No projects matched by corridor keywords.";
     const reportText = `
 IMPACT ASSESSMENT REPORT — YORK REGION
 ${asOfLabel ? asOfLabel + "\n" : ""}Generated: ${new Date().toLocaleDateString()}
@@ -466,7 +534,8 @@ END OF REPORT
                       </p>
                     )}
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-2">Top routes near site</p>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Top routes near site</p>
+                      <p className="text-[10px] text-slate-400 mb-2">Schedule shown as dataset coverage (not availability).</p>
                       {computed.nearbyRoutes && computed.nearbyRoutes.length > 0 ? (
                         <ul className="space-y-1.5">
                           {computed.nearbyRoutes.map((r, i) => (
@@ -547,7 +616,9 @@ END OF REPORT
                         {computed.nearbyProjects.map((p, i) => (
                           <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
                             <td className="px-4 py-2 text-slate-800 font-medium">{p.projectName}</td>
-                            <td className="px-4 py-2 text-slate-600">{p.distanceKm.toFixed(2)} km</td>
+                            <td className="px-4 py-2 text-slate-600">
+                              {p.distanceKm != null ? `${p.distanceKm.toFixed(2)} km` : "N/A"}
+                            </td>
                             <td className="px-4 py-2 text-slate-600">{p.status}</td>
                             <td className="px-4 py-2 text-slate-600">{p.projectSubtype}</td>
                             <td className="px-4 py-2">
@@ -646,6 +717,228 @@ END OF REPORT
                   ))}
                 </ol>
               </section>
+
+              {/* Optimize for me — calls /api/optimize for detailed memo */}
+              <section className="pt-2">
+                <button
+                  type="button"
+                  onClick={runOptimize}
+                  disabled={optimizeLoading}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  {optimizeLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Wrench size={16} />
+                  )}
+                  {optimizeLoading ? "Generating…" : "Optimize for me"}
+                </button>
+                {optimizeError && (
+                  <p className="text-xs text-red-600 mt-2">{optimizeError}</p>
+                )}
+              </section>
+
+              {/* Required Upgrades — rules-based, no AI */}
+              {requiredUpgrades?.required_upgrades && requiredUpgrades.required_upgrades.length > 0 && (
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Wrench size={14} />
+                    Required Upgrades
+                  </h3>
+                  <div className="space-y-3">
+                    {requiredUpgrades.required_upgrades.map((u) => (
+                      <div
+                        key={u.id}
+                        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                          <h4 className="text-sm font-semibold text-slate-800">{u.title}</h4>
+                          <span
+                            className={`shrink-0 px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                              u.severity === "Major"
+                                ? "bg-red-100 text-red-700"
+                                : u.severity === "Moderate"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {u.severity}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-1">
+                          <span className="font-medium text-slate-600">{u.category}</span>
+                          {u.location && ` · ${u.location}`}
+                        </p>
+                        <p className="text-xs text-slate-600 mb-2">{u.trigger}</p>
+                        <div className="flex flex-wrap gap-3 text-[10px] text-slate-500 mb-2">
+                          {u.expected_benefit.traffic_score_delta !== 0 && (
+                            <span>Traffic: {u.expected_benefit.traffic_score_delta > 0 ? "+" : ""}{u.expected_benefit.traffic_score_delta}</span>
+                          )}
+                          {u.expected_benefit.transit_accessibility_delta !== 0 && (
+                            <span>Transit: {u.expected_benefit.transit_accessibility_delta > 0 ? "+" : ""}{u.expected_benefit.transit_accessibility_delta}</span>
+                          )}
+                          {u.expected_benefit.infra_index_delta !== 0 && (
+                            <span>Infra: {u.expected_benefit.infra_index_delta > 0 ? "+" : ""}{u.expected_benefit.infra_index_delta}</span>
+                          )}
+                          {u.expected_benefit.financial_score_delta !== 0 && (
+                            <span>Financial: {u.expected_benefit.financial_score_delta > 0 ? "+" : ""}{u.expected_benefit.financial_score_delta}</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          <span className="font-medium">Owner:</span> {u.suggested_owner}
+                        </p>
+                        {u.notes && (
+                          <p className="text-xs text-slate-600 mt-1.5 pt-1.5 border-t border-slate-100">
+                            {u.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Optimization Memo — from /api/optimize (Gemini + evidence) or fallback */}
+              {optimizationResult && (
+                <section className="border-t border-slate-200 pt-6 mt-6">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Wrench size={14} />
+                    Optimization Memo
+                  </h3>
+                  {optimizationResult.useFallback && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 mb-4 text-sm text-amber-800">
+                      Optimization memo could not be generated; showing rules-based required upgrades below.
+                    </div>
+                  )}
+                  {optimizationResult.memo ? (
+                    <div className="space-y-5">
+                      <p className="text-sm text-slate-700 leading-relaxed">{optimizationResult.memo.summary}</p>
+                      {optimizationResult.memo.site_context && (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                          <p className="text-xs font-semibold text-slate-600">Context</p>
+                          <p className="text-xs text-slate-600">{optimizationResult.memo.site_context.location}</p>
+                          {optimizationResult.memo.site_context.construction_constraints?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Construction</p>
+                              <ul className="space-y-1 text-xs text-slate-700">
+                                {optimizationResult.memo.site_context.construction_constraints.map((c, i) => (
+                                  <li key={i}>{c.name} ({c.distance_km?.toFixed(1)} km) — {c.why_it_matters}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {optimizationResult.memo.site_context.transit_context?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Transit</p>
+                              <ul className="space-y-1 text-xs text-slate-700">
+                                {optimizationResult.memo.site_context.transit_context.map((t, i) => (
+                                  <li key={i}>{t.route} — {t.relevance}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {(optimizationResult.memo.site_context.sources?.length > 0 || optimizationResult.sources?.length > 0) && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Sources</p>
+                              <ul className="space-y-1.5 text-xs">
+                                {(optimizationResult.memo.site_context.sources?.length ? optimizationResult.memo.site_context.sources : optimizationResult.sources).map((s, i) => (
+                                  <li key={i}>
+                                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-medium">{s.title}</a>
+                                    <span className="text-slate-500"> — {s.snippet.slice(0, 120)}…</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {optimizationResult.memo.diagnosis && (
+                        <div className="rounded-xl border border-slate-200 p-4 space-y-2">
+                          <p className="text-xs font-semibold text-slate-600">Diagnosis</p>
+                          {optimizationResult.memo.diagnosis.why_traffic_is_high?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Traffic</p>
+                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
+                                {optimizationResult.memo.diagnosis.why_traffic_is_high.map((b, i) => <li key={i}>{b}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {optimizationResult.memo.diagnosis.why_transit_is_high_or_low?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Transit</p>
+                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
+                                {optimizationResult.memo.diagnosis.why_transit_is_high_or_low.map((b, i) => <li key={i}>{b}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {optimizationResult.memo.diagnosis.why_infrastructure_is_high?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Infrastructure</p>
+                              <ul className="list-disc list-inside text-xs text-slate-700 space-y-0.5">
+                                {optimizationResult.memo.diagnosis.why_infrastructure_is_high.map((b, i) => <li key={i}>{b}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {optimizationResult.memo.recommended_actions?.length > 0 && (
+                        <div className="space-y-4">
+                          <p className="text-xs font-semibold text-slate-600">Recommended actions</p>
+                          {["Now (0-1y)", "Mid (1-3y)", "Long (3-7y)"].map((horizon) => {
+                            const actions = optimizationResult.memo!.recommended_actions.filter((a) => a.horizon === horizon);
+                            if (actions.length === 0) return null;
+                            return (
+                              <div key={horizon} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                                <div className="px-3 py-2 bg-slate-100 text-xs font-bold text-slate-600 uppercase">
+                                  {horizon}
+                                </div>
+                                <div className="p-3 space-y-3">
+                                  {actions.map((a, i) => (
+                                    <div key={i} className="border-b border-slate-100 last:border-0 pb-3 last:pb-0">
+                                      <p className="text-sm font-semibold text-slate-800">{a.action_title}</p>
+                                      <p className="text-xs text-slate-600 mt-1">{a.details}</p>
+                                      <div className="flex flex-wrap gap-2 mt-2 text-[10px] text-slate-500">
+                                        {a.expected_metric_effect && (
+                                          <>
+                                            <span>Traffic: {a.expected_metric_effect.traffic}</span>
+                                            <span>Transit: {a.expected_metric_effect.transit_accessibility}</span>
+                                            <span>Infra: {a.expected_metric_effect.infrastructure}</span>
+                                            <span>Financial: {a.expected_metric_effect.financial}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                      <p className="text-[10px] text-slate-500 mt-1">Owner: {a.owner}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : optimizationResult.requiredUpgrades?.required_upgrades?.length ? (
+                    <div className="space-y-3">
+                      {optimizationResult.requiredUpgrades.required_upgrades.map((u) => (
+                        <div key={u.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                            <h4 className="text-sm font-semibold text-slate-800">{u.title}</h4>
+                            <span
+                              className={`shrink-0 px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                                u.severity === "Major" ? "bg-red-100 text-red-700" : u.severity === "Moderate" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {u.severity}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500">{u.category} · {u.trigger}</p>
+                          <p className="text-xs text-slate-600 mt-1">Owner: {u.suggested_owner}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              )}
             </div>
           )}
         </div>

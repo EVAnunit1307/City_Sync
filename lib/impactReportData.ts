@@ -261,8 +261,12 @@ export function haversineKm(
 /** Default radius (km) for "nearby" projects */
 export const DEFAULT_PROJECT_RADIUS_KM = 2;
 
+/** Hard cap (km) for Impact Report: only projects within this radius are shown or used for constraint. */
+export const REPORT_PROJECT_RADIUS_KM = 5;
+
 /**
  * Find projects within radius of a site (lat/lng). Attach distanceKm to each.
+ * Used when CRS conversion is trusted; otherwise prefer getProjectsForReport (keyword match).
  */
 export function findProjectsNear(
   siteLat: number,
@@ -279,13 +283,61 @@ export function findProjectsNear(
   return nearby;
 }
 
+/**
+ * Match projects by corridor keywords: PROJECTNAME + LOCATION (case-insensitive) must
+ * contain one of the keywords. Attaches distanceKm when site is provided. Sorted by
+ * distance (asc, undefined last). Returns top PROJECTS_CAP (8).
+ * Use this when radius filtering fails (e.g. CRS mismatch) or to ensure corridor-relevant projects.
+ */
+export function findProjectsByCorridorKeyword(
+  siteLat: number,
+  siteLng: number,
+  corridorKeywords: string[]
+): Project[] {
+  const projects = getProjects();
+  if (!corridorKeywords || corridorKeywords.length === 0) return [];
+  const upper = corridorKeywords.map((k) => k.toUpperCase());
+  const combined = (p: Project) =>
+    `${p.projectName || ''} ${p.location || ''}`.toUpperCase();
+  const matched = projects.filter((p) =>
+    upper.some((k) => combined(p).includes(k))
+  );
+  const withDist = matched.map((p) => ({
+    ...p,
+    distanceKm: haversineKm(siteLat, siteLng, p.lat, p.lng),
+  }));
+  withDist.sort((a, b) => {
+    const da = a.distanceKm ?? 9999;
+    const db = b.distanceKm ?? 9999;
+    return da - db;
+  });
+  return withDist.slice(0, PROJECTS_CAP);
+}
+
+/**
+ * Filter to projects within radius (distanceKm <= radiusKm). Sorted by distance ascending.
+ * Use for report so only projects within REPORT_PROJECT_RADIUS_KM are shown or passed to Gemini.
+ */
+export function filterProjectsWithinRadius(
+  projects: Project[],
+  radiusKm: number = REPORT_PROJECT_RADIUS_KM
+): Project[] {
+  const within = projects.filter(
+    (p) => p.distanceKm != null && p.distanceKm <= radiusKm
+  );
+  within.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+  return within;
+}
+
 /** Max number of routes to show in Transit Accessibility (cap). */
 export const TRANSIT_ROUTES_CAP = 8;
 
+/** Max number of projects to show in report (cap). */
+export const PROJECTS_CAP = 8;
+
 /**
- * Strict corridor list for Markham / York Region. Only routes whose ROUTE_LONG_NAME
- * contains one of these (case-insensitive) are considered "nearby". Used when no
- * road network geometry is available.
+ * Strict corridor list for Markham / York Region. Routes: ROUTE_LONG_NAME must contain
+ * one of these. Projects: PROJECTNAME or LOCATION must contain one (for keyword matching).
  */
 export const MARKHAM_CORRIDORS = [
   'HIGHWAY 7',
@@ -296,17 +348,55 @@ export const MARKHAM_CORRIDORS = [
   '16TH AVENUE',
   'NINTH LINE',
   '14TH AVENUE',
+  '14TH',
+  '16TH',
+  'LESLIE',
+  'DENISON',
 ] as const;
 
-/** Legacy export for callers that still reference KEY_CORRIDORS; prefer getCorridorsForSite. */
+/** Legacy export for callers that still reference KEY_CORRIDORS; prefer getCorridorsNearSite. */
 export const KEY_CORRIDORS = [...MARKHAM_CORRIDORS];
 
 /**
- * Return corridor keywords used for route matching at this site.
- * For now uses Markham preset only. Can be extended with nearest-road names or user selection.
+ * Curated bounding boxes (lat/lng) for Markham-area corridors. Used for spatial filtering:
+ * only routes whose corridor name matches a bbox that contains the site are "nearby".
+ * Format: minLat, maxLat, minLng, maxLng (WGS84).
  */
-export function getCorridorsForSite(_lat: number, _lng: number): string[] {
-  return [...MARKHAM_CORRIDORS];
+const CORRIDOR_BBOXES: Array<{ name: string; minLat: number; maxLat: number; minLng: number; maxLng: number }> = [
+  { name: 'HIGHWAY 7', minLat: 43.84, maxLat: 43.88, minLng: -79.38, maxLng: -79.22 },
+  { name: 'MAJOR MACKENZIE', minLat: 43.83, maxLat: 43.92, minLng: -79.38, maxLng: -79.32 },
+  { name: 'KENNEDY', minLat: 43.84, maxLat: 43.90, minLng: -79.30, maxLng: -79.22 },
+  { name: 'MCCOWAN', minLat: 43.84, maxLat: 43.90, minLng: -79.32, maxLng: -79.24 },
+  { name: 'WARDEN', minLat: 43.84, maxLat: 43.90, minLng: -79.34, maxLng: -79.26 },
+  { name: '16TH AVENUE', minLat: 43.86, maxLat: 43.90, minLng: -79.36, maxLng: -79.24 },
+  { name: '14TH AVENUE', minLat: 43.86, maxLat: 43.90, minLng: -79.36, maxLng: -79.24 },
+  { name: '14TH', minLat: 43.86, maxLat: 43.90, minLng: -79.36, maxLng: -79.24 },
+  { name: '16TH', minLat: 43.86, maxLat: 43.90, minLng: -79.36, maxLng: -79.24 },
+  { name: 'NINTH LINE', minLat: 43.86, maxLat: 43.90, minLng: -79.28, maxLng: -79.22 },
+  { name: 'LESLIE', minLat: 43.84, maxLat: 43.90, minLng: -79.32, maxLng: -79.26 },
+  { name: 'DENISON', minLat: 43.85, maxLat: 43.88, minLng: -79.28, maxLng: -79.24 },
+];
+
+/**
+ * Return corridor keywords for route matching only for corridors whose curated bbox contains the site.
+ * This makes "nearby routes" spatial: only routes on corridors that are actually near the point.
+ */
+export function getCorridorsNearSite(lat: number, lng: number): string[] {
+  const names = new Set<string>();
+  for (const box of CORRIDOR_BBOXES) {
+    if (lat >= box.minLat && lat <= box.maxLat && lng >= box.minLng && lng <= box.maxLng) {
+      names.add(box.name);
+    }
+  }
+  return names.size > 0 ? [...names] : [...MARKHAM_CORRIDORS];
+}
+
+/**
+ * Return corridor keywords used for route matching at this site.
+ * Uses spatial bbox when available; otherwise full Markham preset.
+ */
+export function getCorridorsForSite(lat: number, lng: number): string[] {
+  return getCorridorsNearSite(lat, lng);
 }
 
 /**
@@ -400,32 +490,54 @@ export function computeTransitAccessibilityScore(matchedRoutes: Route[]): number
 
 export type ConstructionConstraintLevel = 'Low' | 'Medium' | 'High';
 
+/** Distance band weight: <1 km => 1.0, 1–3 km => 0.6, 3–5 km => 0.3. >5 km ignored by caller. */
+function distanceWeight(km: number): number {
+  if (km < 1) return 1.0;
+  if (km < 3) return 0.6;
+  return 0.3;
+}
+
+/** Severity multiplier from subtype/category (deterministic, no AI). */
+function severityMultiplier(p: Project): number {
+  const sub = (p.projectSubtype || '').toUpperCase();
+  const cat = (p.projectCategory || '').toUpperCase();
+  const type = (p.projectType || '').toUpperCase();
+  const combined = `${sub} ${cat} ${type}`;
+  if (/\b(WIDENING|INTERSECTION|BRIDGE)\b/.test(combined)) return 0.2;
+  if (/\b(PUMPING|RESERVOIR|VALVE|SERVICING)\b/.test(combined)) return 0.15;
+  if (/\b(CULVERT|RESURFACING|PRESERVATION)\b/.test(combined)) return 0.1;
+  return 0;
+}
+
 /**
- * Classify construction constraint from nearby project count and proximity.
+ * Classify construction constraint from projects within 5 km only.
+ * Weighted score: distance bands (<1 km: 1.0, 1–3: 0.6, 3–5: 0.3) + subtype severity.
+ * Label: score < 0.6 => Low, 0.6–1.4 => Medium, >= 1.4 => High.
  */
 export function classifyConstructionConstraint(
-  nearbyProjects: Project[],
-  topDistanceKm?: number
+  nearbyProjects: Project[]
 ): { level: ConstructionConstraintLevel; summary: string } {
   const n = nearbyProjects.length;
+  if (n === 0) {
+    return { level: 'Low', summary: 'No active construction projects within 5 km.' };
+  }
   const closest = nearbyProjects[0]?.distanceKm ?? 999;
-  const avgDist = n
-    ? nearbyProjects.reduce((s, p) => s + (p.distanceKm ?? 0), 0) / n
-    : 999;
-
-  if (n === 0) return { level: 'Low', summary: 'No active construction projects within range.' };
-  if (n >= 5 || closest < 0.5)
-    return {
-      level: 'High',
-      summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Significant construction constraint.`,
-    };
-  if (n >= 2 || closest < 1)
-    return {
-      level: 'Medium',
-      summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Moderate construction constraint.`,
-    };
-  return {
-    level: 'Low',
-    summary: `${n} nearby project(s); closest ${closest.toFixed(1)} km. Low construction constraint.`,
-  };
+  let score = 0;
+  for (const p of nearbyProjects) {
+    const km = p.distanceKm ?? 5;
+    if (km > 5) continue;
+    score += distanceWeight(km) + severityMultiplier(p);
+  }
+  let level: ConstructionConstraintLevel;
+  if (score < 0.6) level = 'Low';
+  else if (score < 1.4) level = 'Medium';
+  else level = 'High';
+  const summary =
+    `${n} project(s) within 5 km; closest ${closest.toFixed(1)} km. ` +
+    (level === 'High'
+      ? 'Significant construction constraint.'
+      : level === 'Medium'
+        ? 'Moderate construction constraint.'
+        : 'Low construction constraint.');
+  return { level, summary };
 }
