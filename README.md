@@ -106,8 +106,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 ├── public/
 │   ├── map-data/           # Pre-processed building, road, and signal data
 │   └── sounds/             # AI-generated sound effects
-└── scripts/                # Data processing utilities 
-```
+└── scripts/                # Data processing utilities
+``` 
 
 ---
 
