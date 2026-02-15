@@ -36,9 +36,11 @@ export interface BuildingListProps {
   setBatchConfig?: React.Dispatch<React.SetStateAction<BatchConfig>>;
   /** When true, hide the inline batch sliders (use Batch Settings accordion instead). */
   hideBatchSliders?: boolean;
+  /** When false, only the "Buildings" header and "+ Add" button are hidden. Group and Place Subdivision (Batch) stay visible. */
+  showSingleBuildingAddUI?: boolean;
 }
 
-export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: setBatchConfigProp, hideBatchSliders }: BuildingListProps = {}) {
+export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: setBatchConfigProp, hideBatchSliders, showSingleBuildingAddUI = false }: BuildingListProps = {}) {
   const {
     buildings,
     selectedBuildingId,
@@ -96,7 +98,9 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Buildings</h3>
+        {showSingleBuildingAddUI && (
+          <h3 className="text-lg font-semibold text-gray-900">Buildings</h3>
+        )}
         <div className="flex gap-2">
           <button
             onClick={() => setMergeMode(!mergeMode)}
@@ -117,13 +121,15 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
           >
             Place Subdivision (Batch)
           </button>
-          <button
-            onClick={handleAddBuilding}
-            disabled={placementMode || mergeMode}
-            className="px-4 py-2 rounded-full font-medium text-sm border-2 bg-gray-100 border-amber-400/60 text-amber-700 hover:bg-amber-500 hover:border-amber-400 hover:text-white hover:shadow-[0_8px_25px_-5px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 ease-out"
-          >
-            {placementMode ? 'Click Grid...' : '+ Add'}
-          </button>
+          {showSingleBuildingAddUI && (
+            <button
+              onClick={handleAddBuilding}
+              disabled={placementMode || mergeMode}
+              className="px-4 py-2 rounded-full font-medium text-sm border-2 bg-gray-100 border-amber-400/60 text-amber-700 hover:bg-amber-500 hover:border-amber-400 hover:text-white hover:shadow-[0_8px_25px_-5px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 active:translate-y-0 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-200 ease-out"
+            >
+              {placementMode ? 'Click Grid...' : '+ Add'}
+            </button>
+          )}
         </div>
       </div>
 

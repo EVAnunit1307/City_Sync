@@ -13,11 +13,12 @@ import { SubdivisionPanel } from './SubdivisionPanel';
 import { BatchSettings } from './BatchSettings';
 import { DEFAULT_BUILDING_SPEC } from '@/lib/editor/types/buildingSpec';
 import { DEFAULT_BATCH_CONFIG, type BatchConfig } from '@/lib/editor/utils/buildingCluster';
-import { exportMultiBuildingsToGLB, exportMultiBuildingsToJSON, copyMultiBuildingsToClipboard, exportToMap } from '@/lib/editor/utils/exportUtils';
-import { ChevronDown, ChevronRight, Building2, BarChart3, FileText, Download, Copy, MapPin } from 'lucide-react';
+import { SHOW_SINGLE_BUILDING_ADD_UI } from '@/lib/editor/config';
+import { exportToMap } from '@/lib/editor/utils/exportUtils';
+import { ChevronDown, ChevronRight, Building2, FileText, MapPin } from 'lucide-react';
 
 type SettingsTab = 'transform' | 'dimensions' | 'textures' | 'windows';
-type MainTab = 'build' | 'impacts' | 'report';
+type MainTab = 'build' | 'report';
 
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'transform', label: 'Transform' },
@@ -28,7 +29,6 @@ const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ReactNode }[] = [
   { id: 'build', label: 'Build', icon: <Building2 size={16} /> },
-  { id: 'impacts', label: 'Impacts', icon: <BarChart3 size={16} /> },
   { id: 'report', label: 'Report', icon: <FileText size={16} /> },
 ];
 
@@ -65,40 +65,7 @@ interface ReportTabContentProps {
 function ReportTabContent({ sceneRef }: ReportTabContentProps) {
   const { buildings } = useBuildings();
   const router = useRouter();
-  const [exporting, setExporting] = useState(false);
   const [exportingToMap, setExportingToMap] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleExportGLB = async () => {
-    if (!sceneRef.current) {
-      alert('Scene not ready for export');
-      return;
-    }
-    setExporting(true);
-    try {
-      await exportMultiBuildingsToGLB(sceneRef.current);
-      alert(`Exported ${buildings.length} building${buildings.length !== 1 ? 's' : ''} as GLB`);
-    } catch (e) {
-      console.error(e);
-      alert('Export failed');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportJSON = () => {
-    exportMultiBuildingsToJSON(buildings);
-  };
-
-  const handleCopyJSON = async () => {
-    try {
-      await copyMultiBuildingsToClipboard(buildings);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert('Copy failed');
-    }
-  };
 
   const handleExportToMap = async () => {
     if (!sceneRef.current || buildings.length === 0) {
@@ -123,31 +90,6 @@ function ReportTabContent({ sceneRef }: ReportTabContentProps) {
         {buildings.length} building{buildings.length !== 1 ? 's' : ''} in scene
       </p>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={handleExportGLB}
-          disabled={exporting}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-60"
-        >
-          <Download size={14} />
-          {exporting ? 'Exporting…' : 'Download GLB'}
-        </button>
-        <button
-          type="button"
-          onClick={handleExportJSON}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-        >
-          <Download size={14} />
-          JSON
-        </button>
-        <button
-          type="button"
-          onClick={handleCopyJSON}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-        >
-          <Copy size={14} />
-          {copied ? 'Copied!' : 'Copy JSON'}
-        </button>
         <button
           type="button"
           onClick={handleExportToMap}
@@ -196,10 +138,6 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
     setBuildAccordion(key);
   }, []);
 
-  const units = buildings.length;
-  const congestion = '—';
-  const transitLoad = '—';
-
   return (
     <div className="w-full flex flex-col min-h-0">
       {/* Main tabs */}
@@ -233,6 +171,7 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
                   batchConfig={batchConfig}
                   setBatchConfig={setBatchConfig}
                   hideBatchSliders
+                  showSingleBuildingAddUI={SHOW_SINGLE_BUILDING_ADD_UI}
                 />
               </Accordion>
               <Accordion
@@ -250,26 +189,6 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
                 <SubdivisionPanel />
               </Accordion>
             </>
-          )}
-
-          {mainTab === 'impacts' && (
-            <div className="rounded-xl border border-slate-200/80 bg-white/90 p-4 space-y-3 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-800">Live metrics</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 rounded-lg bg-slate-50/80 border border-slate-100">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">Congestion</p>
-                  <p className="text-sm font-semibold text-slate-800">{congestion}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-slate-50/80 border border-slate-100">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">Transit load</p>
-                  <p className="text-sm font-semibold text-slate-800">{transitLoad}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-slate-50/80 border border-slate-100">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wide">Units</p>
-                  <p className="text-sm font-semibold text-slate-800">{units}</p>
-                </div>
-              </div>
-            </div>
           )}
 
           {mainTab === 'report' && sceneRef && (
