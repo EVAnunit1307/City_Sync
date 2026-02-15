@@ -86,8 +86,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
                                /api/tree-advisor --> Species Recommendations (Gemini)
 ```
 
---- 
-
+---
+ 
 ## Project Structure
 
 ```
