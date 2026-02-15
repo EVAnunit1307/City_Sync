@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { PerspectiveCamera, Circle } from "@react-three/drei";
+import { PerspectiveCamera, Line } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
 import { motion } from "framer-motion";
@@ -13,11 +13,58 @@ interface BoardSceneProps {
   mouseY: number;
 }
 
-// Board base - minimal, clean (no rings for clean look)
+// Board base with grid overlay and simulation indicators
 function BoardBase() {
+  const gridRef = useRef<THREE.Mesh>(null);
+  const pulseRef = useRef<THREE.Mesh>(null);
+  
+  useFrame(({ clock }) => {
+    // Subtle pulsing animation for transit nodes
+    if (pulseRef.current) {
+      const pulse = Math.sin(clock.getElapsedTime() * 2) * 0.5 + 0.5;
+      pulseRef.current.scale.setScalar(0.3 + pulse * 0.2);
+    }
+  });
+  
   return (
     <group position={[0, 0, 0]}>
-      {/* Empty - clean background with no circular shadows */}
+      {/* Subtle grid overlay - planning board aesthetic */}
+      <mesh ref={gridRef} position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[15, 15]} />
+        <meshBasicMaterial 
+          color="#7b68ee" 
+          transparent 
+          opacity={0.03}
+          wireframe 
+        />
+      </mesh>
+      
+      {/* Pulsing transit node indicator */}
+      <mesh ref={pulseRef} position={[1.5, 0.1, 0]}>
+        <circleGeometry args={[0.15, 16]} />
+        <meshBasicMaterial 
+          color="#7b68ee" 
+          transparent 
+          opacity={0.6}
+        />
+      </mesh>
+      
+      {/* Glowing parcel outline examples */}
+      <Line
+        points={[[-2, 0.02, -1.5], [-1, 0.02, -1.5], [-1, 0.02, -0.5], [-2, 0.02, -0.5], [-2, 0.02, -1.5]]}
+        color="#7b68ee"
+        lineWidth={1}
+        transparent
+        opacity={0.4}
+      />
+      
+      <Line
+        points={[[0.5, 0.02, 1], [1.5, 0.02, 1], [1.5, 0.02, 2], [0.5, 0.02, 2], [0.5, 0.02, 1]]}
+        color="#7b68ee"
+        lineWidth={1}
+        transparent
+        opacity={0.3}
+      />
     </group>
   );
 }
@@ -29,33 +76,38 @@ function TorontoModel({ mouseX, mouseY }: BoardSceneProps) {
   
   useEffect(() => {
     if (gltf.scene) {
-      // Apply clean light gray material - prevent black rendering
+      // Improved materials with better contrast
       gltf.scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
           if (mesh.material) {
             const material = mesh.material as THREE.MeshStandardMaterial;
-            material.color = new THREE.Color(0.65, 0.65, 0.65);
-            material.emissive = new THREE.Color(0.05, 0.05, 0.05);
-            material.metalness = 0.2;
-            material.roughness = 0.75;
-            material.side = THREE.DoubleSide; // Ensure both sides render
+            // Lighter, more contrasted materials
+            material.color = new THREE.Color(0.8, 0.8, 0.82);
+            material.emissive = new THREE.Color(0.08, 0.08, 0.1);
+            material.metalness = 0.3;
+            material.roughness = 0.6;
+            material.side = THREE.DoubleSide;
           }
         }
       });
     }
   }, [gltf]);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (groupRef.current) {
-      // More noticeable parallax rotation for better interaction feedback
-      const targetRotationY = mouseX * 0.15;
+      // Parallax rotation + subtle auto-drift
+      const drift = Math.sin(clock.getElapsedTime() * 0.1) * 0.02;
+      const targetRotationY = mouseX * 0.15 + drift;
       
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         targetRotationY,
         0.1
       );
+      
+      // Subtle floating animation
+      groupRef.current.position.y = Math.sin(clock.getElapsedTime() * 0.3) * 0.05;
     }
   });
 
@@ -71,10 +123,11 @@ function TorontoModel({ mouseX, mouseY }: BoardSceneProps) {
 function Scene({ mouseX, mouseY }: BoardSceneProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
   
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (cameraRef.current) {
-      // More dramatic camera movement - increased sensitivity
-      const targetX = mouseY * 1.2;
+      // Camera parallax + subtle auto-drift
+      const drift = Math.sin(clock.getElapsedTime() * 0.15) * 0.1;
+      const targetX = mouseY * 1.2 + drift;
       const targetZ = 8 + mouseX * 1.5;
       
       cameraRef.current.position.x = THREE.MathUtils.lerp(
@@ -102,10 +155,11 @@ function Scene({ mouseX, mouseY }: BoardSceneProps) {
         fov={50}
       />
       
-      {/* Simplified lighting - no shadows for performance */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 15, 5]} intensity={1.0} />
-      <directionalLight position={[-5, 10, -5]} intensity={0.4} />
+      {/* Enhanced lighting from top-left with better contrast */}
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[-10, 12, 8]} intensity={1.2} color="#ffffff" />
+      <directionalLight position={[5, 8, -5]} intensity={0.6} color="#d0d0ff" />
+      <pointLight position={[0, 5, 0]} intensity={0.3} color="#7b68ee" />
       
       {/* Board base plate */}
       <BoardBase />
@@ -153,26 +207,29 @@ export function Hero3D() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <p className="hero-board-kicker">reimagine.</p>
           <h1 className="hero-board-title">
             GrowthSync<span className="hero-title-dot">.</span>
           </h1>
           <p className="hero-board-subtitle">
-            A subdivision digital twin for real-time zoning, cost, and mobility impacts.
+            Simulate subdivision growth before it gets approved.
+          </p>
+          <p className="hero-board-subtext">
+            Real-time zoning, cost, transit, and congestion impacts.
           </p>
           
           <div className="hero-board-ctas">
-            <Link href="#demo" className="hero-board-btn-primary">
-              Explore the platform
+            <Link href="/map" className="hero-board-btn-primary">
+              Run Scenario
             </Link>
             <Link href="/editor" className="hero-board-btn-secondary">
               Open 3D Builder
             </Link>
           </div>
           
-          <p className="hero-board-voice-hint">
-            Try: &quot;Add 200 townhouses near transit.&quot;
-          </p>
+          <div className="hero-board-console">
+            <span className="console-prompt">&gt;</span>
+            <span className="console-text">Try: &quot;Add 200 townhouses near transit.&quot;</span>
+          </div>
         </motion.div>
       </div>
 

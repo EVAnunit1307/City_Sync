@@ -278,6 +278,11 @@
   top: 2rem;
   left: 3rem;
   z-index: 10;
+  padding: 0.75rem 1.5rem;
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero-board-brand {
@@ -286,6 +291,7 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
 
 /* 3D Canvas */
@@ -295,6 +301,21 @@
   z-index: 3;
   width: 100%;
   height: 100%;
+}
+
+.hero-board-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.3) 80%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .hero-board-canvas canvas {
@@ -310,6 +331,10 @@
   transform: translateY(-50%);
   z-index: 10;
   max-width: 600px;
+  padding: 2rem;
+  background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.7) 0%, rgba(10, 10, 10, 0.3) 70%, transparent 100%);
+  backdrop-filter: blur(4px);
+  border-radius: 16px;
 }
 
 .hero-board-kicker {
@@ -317,13 +342,14 @@
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: #aaaaaa;
+  color: #d0d0d0;
   margin: 0 0 0.75rem 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .hero-board-title {
   font-family: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
-  font-size: clamp(4rem, 10vw, 8rem);
+  font-size: clamp(3rem, 7.5vw, 5.5rem);
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.02em;
@@ -335,15 +361,68 @@
 .hero-title-dot {
   color: #7b68ee;
   font-weight: 700;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(123, 104, 238, 0.6);
+  }
+  50% {
+    opacity: 0.4;
+    text-shadow: 0 0 20px rgba(123, 104, 238, 0.8);
+  }
 }
 
 .hero-board-subtitle {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: #ffffff;
+  font-weight: 500;
+  margin: 0 0 0.75rem 0;
+  max-width: 500px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+.hero-board-subtext {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
   line-height: 1.6;
-  color: #cccccc;
+  color: #e5e5e5;
   margin: 0 0 2.5rem 0;
   max-width: 500px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Console / Voice Hint */
+.hero-board-console {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: rgba(123, 104, 238, 0.18);
+  border: 2px solid rgba(123, 104, 238, 0.4);
+  border-radius: 6px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.85rem;
+  max-width: 500px;
+  margin-top: 2rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.console-prompt {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1rem;
+  text-shadow: 0 0 8px rgba(123, 104, 238, 0.6);
+}
+
+.console-text {
+  color: #e5e5e5;
+  letter-spacing: 0.01em;
 }
 
 /* CTAs */
@@ -357,43 +436,48 @@
   display: inline-flex;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   color: #ffffff;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-radius: 6px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 
 .hero-board-btn-primary:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .hero-board-btn-secondary {
   display: inline-flex;
   align-items: center;
   padding: 1rem 2rem;
-  background: transparent;
-  color: #b0b0b0;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e5e5;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
 
 .hero-board-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
   color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .hero-board-voice-hint {
@@ -410,19 +494,26 @@
   right: 3rem;
   z-index: 10;
   text-align: right;
+  padding: 1rem 1.5rem;
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(12px);
+  border-radius: 8px;
+  border: 1px solid rgba(123, 104, 238, 0.2);
 }
 
 .coords-line {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
-  color: #7b68ee;
+  color: #a78bfa;
   line-height: 1.6;
   text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(123, 104, 238, 0.4);
 }
 
 .coords-highlight {
-  color: #8b78ff;
+  color: #c4b5fd;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 12px rgba(139, 120, 255, 0.6);
 }
 
 /* Responsive 3D Hero */
@@ -1693,7 +1784,7 @@ h3,
 /* Features Section */
 .tp-features-section {
   padding: 4rem clamp(1rem, 3vw, 2.5rem);
-  background: linear-gradient(180deg, var(--tp-bg) 0%, var(--tp-surface) 100%);
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
 }
 
 .tp-features-grid {
@@ -1706,21 +1797,28 @@ h3,
 
 .tp-feature-card {
   padding: 2.5rem 2rem;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(103, 91, 78, 0.15);
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(53, 40, 23, 0.06);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .tp-feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 32px rgba(53, 40, 23, 0.12);
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .tp-feature-icon {
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
 .tp-feature-card h3 {
@@ -1728,13 +1826,13 @@ h3,
   font-family: var(--font-playfair), Georgia, serif;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--tp-ink);
+  color: #ffffff;
   letter-spacing: -0.01em;
 }
 
 .tp-feature-card p {
   margin: 0 0 1.5rem;
-  color: var(--tp-muted);
+  color: rgba(255, 255, 255, 0.65);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -1743,16 +1841,17 @@ h3,
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--tp-ink);
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
   letter-spacing: 0.02em;
-  transition: gap 0.2s ease;
+  transition: gap 0.2s ease, color 0.2s ease;
 }
 
 .tp-feature-link:hover {
   gap: 0.75rem;
+  color: #ffffff;
 }
 
 /* Bottom CTA enhancements */
@@ -2109,6 +2208,7 @@ h3,
   .hero-board-content {
     left: 2rem;
     max-width: calc(100% - 4rem);
+    padding: 1.5rem;
   }
 
   .hero-board-coords {
@@ -2116,7 +2216,7 @@ h3,
   }
 
   .hero-board-title {
-    font-size: 4rem;
+    font-size: 3rem;
   }
 
   .hero-board-ctas {
@@ -2133,25 +2233,32 @@ h3,
 @media (max-width: 640px) {
   .hero-board-header {
     left: 1.5rem;
+    padding: 0.5rem 1rem;
   }
 
   .hero-board-content {
     left: 1.5rem;
     right: 1.5rem;
     max-width: calc(100% - 3rem);
+    padding: 1rem;
   }
 
   .hero-board-coords {
     right: 1.5rem;
     font-size: 0.65rem;
+    padding: 0.75rem 1rem;
   }
 
   .hero-board-title {
-    font-size: 3rem;
+    font-size: 2.25rem;
   }
 
   .hero-board-subtitle {
-    font-size: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .hero-board-subtext {
+    font-size: 0.9rem;
   }
 }
 

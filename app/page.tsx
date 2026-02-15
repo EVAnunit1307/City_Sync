@@ -112,17 +112,6 @@ export default function Landing() {
         </motion.div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="tp-bottom-cta">
-        <div className="tp-bottom-cta-content">
-          <h2>From planning vision to implementation.</h2>
-          <p>Model subdivision impacts, analyze infrastructure capacity, and move from concept to approval with Vaughan&apos;s digital twin platform.</p>
-          <div className="tp-bottom-links">
-            <Link href="/map">Open Live Map</Link>
-            <Link href="/editor">Start Building</Link>
-          </div>
-        </div>
-      </section>
 
       {/* Tech Stack Carousel - Bottom of Page */}
       <section className="tech-carousel-section">
