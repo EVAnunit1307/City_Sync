@@ -74,8 +74,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 
 ## Architecture
 
-``` 
-Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
+```
+Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash 
                                                        |
                                                3D Building Editor (Three.js)
                                                + AI Sound Effects (ElevenLabs)
