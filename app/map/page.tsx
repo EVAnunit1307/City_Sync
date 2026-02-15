@@ -244,14 +244,11 @@ function MapPageContent() {
       lng: pendingPlacement.lng,
       timeline: {
         zoneType: details.zoneType,
-        startDate: details.startDate,
-        durationDays: details.durationDays,
       },
     };
     setPlacedBuildings((prev) => [...prev, newBuilding]);
     setPendingPlacement(null);
     setIsPlacementMode(false);
-    setTimelineDate(details.startDate);
   };
 
   const clearImportedBuilding = () => {
