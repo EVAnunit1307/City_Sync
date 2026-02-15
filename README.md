@@ -122,8 +122,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 | Validation | Zod |
 | Geospatial | Turf.js, Web Mercator projection, OpenStreetMap |
 | Traffic | A* pathfinding, spatial grid collision, signal coordination |
-| Export | GLB (3D model), GeoJSON (geospatial) | 
-
+| Export | GLB (3D model), GeoJSON (geospatial) |
+ 
 ---
 
 ## Team
