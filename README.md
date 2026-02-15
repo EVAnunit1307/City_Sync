@@ -50,8 +50,8 @@ Create a `.env.local` file:
 GEMINI_API_KEY=your_gemini_api_key
 ELEVENLABS_API_KEY=your_elevenlabs_api_key
 ```
- 
-### Development
+
+### Development 
 
 ```bash
 npm run dev
