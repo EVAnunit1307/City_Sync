@@ -42,8 +42,8 @@ cd CHD_city_pathing
 npm install
 ```
 
-### Environment Variables 
-
+### Environment Variables
+ 
 Create a `.env.local` file:
 
 ```env
