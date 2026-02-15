@@ -61,8 +61,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 
 ---
 
-## Demo Flow 
-
+## Demo Flow
+ 
 1. View baseline neighborhood in 3D
 2. Add 1,200 detached homes — watch congestion spike, transit underused
 3. Switch to transit-oriented mixed density
