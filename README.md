@@ -24,8 +24,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 - **AI Optimization** - Request *"Keep units at 1,000 but reduce congestion"* for density redistribution suggestions
 - **Randomized Building Generation** - Each placed building gets unique dimensions, orientation, roof style, and facade
 - **Environmental Reports** - Carbon footprint, noise propagation, habitat, and community impact analysis
- 
----
+
+--- 
 
 ## Getting Started
 
