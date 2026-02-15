@@ -7,8 +7,8 @@ A 3D digital twin platform that allows city planners to test housing proposals i
 ## Overview
 
 GrowthSync re-engineers traditional planning review by transforming static development reports into an interactive, scenario-based simulation tool. Instead of reviewing consultant PDFs after the fact, planners can model impacts immediately.
- 
-Place a proposed subdivision into the 3D environment, define unit count and housing mix, and watch real-time projections update across transportation, transit, infrastructure, and cost metrics.
+
+Place a proposed subdivision into the 3D environment, define unit count and housing mix, and watch real-time projections update across transportation, transit, infrastructure, and cost metrics. 
 
 ---
 
