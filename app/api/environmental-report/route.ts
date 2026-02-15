@@ -14,6 +14,7 @@ import {
   REPORT_PROJECT_RADIUS_KM,
 } from '@/lib/impactReportData';
 import { computeRequiredUpgrades } from '@/lib/requiredUpgrades';
+import { estimateFinanceExecution, type FinanceExecutionOutput } from '@/lib/financeExecution';
 
 interface PlacedBuilding {
   id: string;
@@ -317,10 +318,15 @@ Respond ONLY with the JSON object, no additional text.`;
       matchedCorridors: computed.matchedCorridors,
     });
 
+    const financeExecution: FinanceExecutionOutput = estimateFinanceExecution({
+      unitCount: buildings.length,
+    });
+
     return NextResponse.json({
       report,
       computed,
       requiredUpgrades,
+      financeExecution,
       generatedAt: new Date().toISOString(),
       buildingCount: buildings.length,
       snapshotDate: snapshot?.timelineDate ?? null,

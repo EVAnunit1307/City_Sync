@@ -6,13 +6,10 @@ import ThreeMap from "@/components/ThreeMap";
 import {
   Landmark,
   SlidersHorizontal,
-  PlayCircle,
-  Clock,
   MapPin,
   Copy,
   X,
   Upload,
-  Pause,
   ClipboardList,
   Map,
 } from "lucide-react";
@@ -849,149 +846,6 @@ function MapPageContent() {
         context={`${placedBuildings.length} buildings placed, ${buildingsActiveAtTimeline.length} active`}
       />
 
-      {/* FIXED BOTTOM PANEL: INTEGRATED TIMELINE - only show when at least one building is placed */}
-      {placedBuildings.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10 px-8 py-4 flex items-center gap-10 shadow-lg">
-          {/* Simulation Controls */}
-          <div className="flex items-center gap-4 shrink-0 border-r border-white/10 pr-10">
-            <button
-              onClick={() => setIsTimelinePlaying((p) => !p)}
-              className={`w-10 h-10 rounded flex items-center justify-center transition-colors shadow-sm ${
-                isTimelinePlaying
-                  ? "bg-amber-500 text-white hover:bg-amber-600 border border-amber-400/30"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-500/30"
-              }`}
-              title={isTimelinePlaying ? "Pause" : "Play timeline"}
-            >
-              {isTimelinePlaying ? (
-                <Pause size={20} />
-              ) : (
-                <PlayCircle size={20} />
-              )}
-            </button>
-            <div>
-              <p className="text-xs font-black text-white uppercase tracking-tight font-serif">
-                Construction Timeline
-              </p>
-              <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest">
-                View building progress
-              </p>
-            </div>
-          </div>
-
-          {/* Timeline Slider - week-based, dynamic range */}
-          <div className="flex-1 flex flex-col gap-3">
-            {(() => {
-              const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-              const minT = timelineRange.minDate.getTime();
-              const maxT = timelineRange.maxDate.getTime();
-              const rangeMs = maxT - minT || 1;
-              const currentVal = new Date(timelineDate).getTime();
-              const clampedVal = Math.max(minT, Math.min(maxT, currentVal));
-              const pct = ((clampedVal - minT) / rangeMs) * 100;
-
-              const weekCount = Math.ceil(rangeMs / WEEK_MS);
-              const tickStep = Math.max(1, Math.floor(weekCount / 8));
-              const ticks: { t: number; label: string }[] = [];
-              for (let i = 0; i <= weekCount; i += tickStep) {
-                const t = minT + i * WEEK_MS;
-                if (t <= maxT) {
-                  const d = new Date(t);
-                  ticks.push({
-                    t,
-                    label: `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`,
-                  });
-                }
-              }
-              if (ticks[ticks.length - 1]?.t !== maxT) {
-                const d = new Date(maxT);
-                ticks.push({
-                  t: maxT,
-                  label: `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`,
-                });
-              }
-
-              return (
-                <>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min={minT}
-                      max={maxT}
-                      step={WEEK_MS}
-                      value={clampedVal}
-                      onChange={(e) => {
-                        const t = parseInt(e.target.value, 10);
-                        setTimelineDate(new Date(t).toISOString().slice(0, 10));
-                      }}
-                      className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-emerald-400 [&::-webkit-slider-thumb]:cursor-grab"
-                      style={{
-                        background: `linear-gradient(to right, #10b981 0%, #10b981 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
-                      }}
-                    />
-                    <div className="absolute top-4 left-0 right-0 h-4 pointer-events-none">
-                      {ticks.map(({ t, label }) => {
-                        const tickPct = ((t - minT) / rangeMs) * 100;
-                        return (
-                          <span
-                            key={t}
-                            className="absolute text-[8px] text-white/40 font-mono whitespace-nowrap"
-                            style={{
-                              left: `calc(${tickPct}% - 1px)`,
-                              transform: "translateX(-50%)",
-                            }}
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex justify-between px-0.5 text-[8px] text-white/30 font-bold uppercase">
-                    <span>Wk 1</span>
-                    <span>Week {weekCount}</span>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-
-          {/* Timestamp & Settings */}
-          <div className="flex items-center gap-4 shrink-0 border-l border-white/10 pl-10">
-            <div className="flex flex-col items-end">
-              <span className="text-xs font-medium text-white/50 uppercase tracking-wide mb-1">Active Timestamp</span>
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded border border-white/10">
-                <Clock className="text-white/40" size={14} />
-                <span className="text-[10px] font-black text-white uppercase">
-                  {new Date(timelineDate)
-                    .toLocaleDateString("en-US", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    .toUpperCase()}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => {
-                  const today = new Date().toISOString().slice(0, 10);
-                  if (today >= minDateStr && today <= maxDateStr) {
-                    setTimelineDate(today);
-                  } else {
-                    setTimelineDate(minDateStr);
-                  }
-                }}
-                className="text-[9px] font-bold text-emerald-400 border border-emerald-500/50 px-2 py-1 rounded hover:bg-emerald-500/10 transition-colors uppercase"
-                title="Go to today, or start of project if today is outside range"
-              >
-                Today
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

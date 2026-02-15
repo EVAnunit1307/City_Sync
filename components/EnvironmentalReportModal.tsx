@@ -24,6 +24,7 @@ import {
 import type { ImpactReportComputed } from "@/app/api/environmental-report/route";
 import type { RequiredUpgradesOutput } from "@/lib/requiredUpgrades";
 import type { OptimizationMemo } from "@/lib/optimizeMemoTypes";
+import type { FinanceExecutionOutput } from "@/lib/financeExecution";
 
 interface PlacedBuilding {
   id: string;
@@ -97,6 +98,7 @@ export default function EnvironmentalReportModal({
   const [report, setReport] = useState<EnvironmentalReport | null>(null);
   const [computed, setComputed] = useState<ImpactReportComputed | null>(null);
   const [requiredUpgrades, setRequiredUpgrades] = useState<RequiredUpgradesOutput | null>(null);
+  const [financeExecution, setFinanceExecution] = useState<FinanceExecutionOutput | null>(null);
   const [reportSnapshotDate, setReportSnapshotDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +137,7 @@ export default function EnvironmentalReportModal({
       setReport(data.report);
       setComputed(data.computed ?? null);
       setRequiredUpgrades(data.requiredUpgrades ?? null);
+      setFinanceExecution(data.financeExecution ?? null);
       setReportSnapshotDate(data.snapshotDate ?? snapshot?.timelineDate ?? null);
       setOptimizationResult(null);
     } catch (err) {
@@ -590,6 +593,93 @@ END OF REPORT
                   </h3>
                   <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                     <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{report.financialImpact}</p>
+                  </div>
+                </section>
+              )}
+
+              {/* Finance & Execution — subdivision cost + timeline (rules-based) */}
+              {financeExecution && (
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Wrench size={14} />
+                    Finance &amp; Execution
+                  </h3>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Land required</p>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {financeExecution.land.required_area_m2.toLocaleString()} m² ({financeExecution.land.required_area_acres} acres)
+                        </p>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Cost: ${(financeExecution.land.cost_range_cad.low / 1_000_000).toFixed(2)}M – ${(financeExecution.land.cost_range_cad.high / 1_000_000).toFixed(2)}M CAD
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Construction cost</p>
+                        <p className="text-sm font-semibold text-slate-800">
+                          ${(financeExecution.construction.cost_range_cad.low / 1_000_000).toFixed(2)}M – ${(financeExecution.construction.cost_range_cad.high / 1_000_000).toFixed(2)}M CAD
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Construction by type</p>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-left text-slate-500">
+                            <th className="py-1.5 pr-2">Type</th>
+                            <th className="py-1.5 pr-2 text-right">Units</th>
+                            <th className="py-1.5 pr-2 text-right">$/unit</th>
+                            <th className="py-1.5 text-right">Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {financeExecution.construction.breakdown.map((row) => (
+                            <tr key={row.type} className="border-b border-slate-100 last:border-0">
+                              <td className="py-1.5 pr-2 text-slate-700">{row.type}</td>
+                              <td className="py-1.5 pr-2 text-right text-slate-600">{row.units}</td>
+                              <td className="py-1.5 pr-2 text-right text-slate-600">
+                                ${(row.cost_per_unit_low / 1000).toFixed(0)}k – ${(row.cost_per_unit_high / 1000).toFixed(0)}k
+                              </td>
+                              <td className="py-1.5 text-right text-slate-700">
+                                ${(row.subtotal_low / 1_000_000).toFixed(2)}M – ${(row.subtotal_high / 1_000_000).toFixed(2)}M
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Total project cost (land + construction + soft + contingency)</p>
+                      <p className="text-base font-bold text-slate-900">
+                        ${(financeExecution.total_project_cost.low / 1_000_000).toFixed(2)}M – ${(financeExecution.total_project_cost.high / 1_000_000).toFixed(2)}M CAD
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-1">Includes: {financeExecution.total_project_cost.includes.join(", ")}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Execution timeline</p>
+                      <p className="text-sm font-semibold text-slate-800 mb-2">
+                        {financeExecution.execution_timeline.estimated_months_low} – {financeExecution.execution_timeline.estimated_months_high} months
+                        {financeExecution.execution_timeline.estimated_months_high >= 12 && (
+                          <span className="text-slate-600 font-normal ml-1">
+                            ({(financeExecution.execution_timeline.estimated_months_low / 12).toFixed(1)} – {(financeExecution.execution_timeline.estimated_months_high / 12).toFixed(1)} years)
+                          </span>
+                        )}
+                      </p>
+                      <ul className="space-y-1 text-xs text-slate-600">
+                        {financeExecution.execution_timeline.phases.map((p) => (
+                          <li key={p.name} className="flex justify-between gap-2">
+                            <span>{p.name}</span>
+                            <span className="tabular-nums">{p.months} mo</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {financeExecution.execution_timeline.assumptions.length > 0 && (
+                        <p className="text-[10px] text-slate-500 mt-2 italic">
+                          {financeExecution.execution_timeline.assumptions[0]}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </section>
               )}
