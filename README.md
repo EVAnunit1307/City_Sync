@@ -68,8 +68,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 3. Switch to transit-oriented mixed density
 4. Congestion drops, transit usage increases, infrastructure index stabilizes
 5. Generate environmental impact report
-6. Ask AI for optimization suggestions 
-
+6. Ask AI for optimization suggestions
+ 
 ---
 
 ## Architecture
