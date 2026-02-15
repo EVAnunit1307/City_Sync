@@ -102,8 +102,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 │   ├── buildingRenderer.ts # Building rendering with varied facades
 │   ├── projection.ts       # Web Mercator coordinate projection
 │   ├── roadNetwork.ts      # Road graph and A* pathfinding
-│   └── simulationConfig.ts # Traffic simulation parameters 
-├── public/
+│   └── simulationConfig.ts # Traffic simulation parameters
+├── public/ 
 │   ├── map-data/           # Pre-processed building, road, and signal data
 │   └── sounds/             # AI-generated sound effects
 └── scripts/                # Data processing utilities
