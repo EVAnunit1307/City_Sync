@@ -47,8 +47,8 @@ npm install
 Create a `.env.local` file:
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key 
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
+GEMINI_API_KEY=your_gemini_api_key
+ELEVENLABS_API_KEY=your_elevenlabs_api_key 
 ```
 
 ### Development
