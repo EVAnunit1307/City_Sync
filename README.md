@@ -56,8 +56,8 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key
 ```bash
 npm run dev
 ```
- 
-Open [http://localhost:3002](http://localhost:3002) in your browser.
+
+Open [http://localhost:3002](http://localhost:3002) in your browser. 
 
 ---
 
