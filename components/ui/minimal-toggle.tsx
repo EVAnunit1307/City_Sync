@@ -6,26 +6,26 @@ import { cn } from "@/lib/utils"
 const MinimalToggle = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => {
     return (
-      <label className="relative inline-block h-[1.8em] w-[3.7em] text-[17px]">
+      <label className="relative inline-block h-[1.25em] w-[2.4em] text-[17px]">
         <input
           type="checkbox"
           ref={ref}
           className={cn(
-            "group h-0 w-0",
-            "[&:checked+span:before]:translate-x-[1.9em]",
-            "[&:checked+span:before]:bg-emerald-500/70",
-            "dark:[&:checked+span:before]:bg-emerald-500",
-            "[&:checked+span]:bg-emerald-300",
-            "dark:[&:checked+span]:bg-emerald-900",
+            "group h-0 w-0 opacity-0 absolute",
+            "[&:checked+span:before]:translate-x-[1.15em]",
+            "[&:checked+span:before]:bg-emerald-400",
+            "dark:[&:checked+span:before]:bg-emerald-400",
+            "[&:checked+span]:bg-emerald-600",
+            "dark:[&:checked+span]:bg-emerald-700",
             className
           )}
           {...props}
         />
         <span className={cn(
-          "absolute inset-0 cursor-pointer rounded-[30px] bg-gray-300 transition ease-in-out",
-          "before:absolute before:bottom-[0.2em] before:left-[0.2em] before:h-[1.4em] before:w-[1.4em]",
-          "before:rounded-[20px] before:bg-gray-400 before:transition before:duration-300 before:content-['']",
-          "dark:bg-gray-700 dark:before:bg-gray-400"
+          "absolute inset-0 cursor-pointer rounded-full bg-gray-600 transition ease-in-out",
+          "before:absolute before:top-[0.15em] before:left-[0.15em] before:h-[0.95em] before:w-[0.95em]",
+          "before:rounded-full before:bg-white/90 before:transition before:duration-300 before:content-['']",
+          "dark:bg-gray-700 dark:before:bg-white/90"
         )} />
       </label>
     )
