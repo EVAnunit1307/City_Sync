@@ -41,7 +41,40 @@ interface ReportTabContentProps {
 function ReportTabContent({ sceneRef }: ReportTabContentProps) {
   const { buildings } = useBuildings();
   const router = useRouter();
+  const [exporting, setExporting] = useState(false);
   const [exportingToMap, setExportingToMap] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleExportGLB = async () => {
+    if (!sceneRef.current) {
+      alert('Scene not ready for export');
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportMultiBuildingsToGLB(sceneRef.current);
+      alert(`Exported ${buildings.length} building${buildings.length !== 1 ? 's' : ''} as GLB`);
+    } catch (e) {
+      console.error(e);
+      alert('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    exportMultiBuildingsToJSON(buildings);
+  };
+
+  const handleCopyJSON = async () => {
+    try {
+      await copyMultiBuildingsToClipboard(buildings);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('Copy failed');
+    }
+  };
 
   const handleExportToMap = async () => {
     if (!sceneRef.current || buildings.length === 0) {

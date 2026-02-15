@@ -202,9 +202,9 @@ export function VoiceDesign() {
 
   return (
     <div className="voice-bar-animate fixed bottom-0 left-0 right-96 z-50 flex flex-col items-center px-8 pb-6">
-      {/* Popover: Last Voice Command details - minimal transparent theme */}
+      {/* Popover: Last Voice Command details - darker theme */}
       {lastResult && showDetails && (
-        <div className="mb-3 w-full max-w-2xl bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
+        <div className="mb-3 w-full max-w-2xl bg-black/60 backdrop-blur-md rounded-2xl shadow-2xl border border-white/15 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-white uppercase tracking-wide" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
               Last Voice Command
@@ -235,15 +235,15 @@ export function VoiceDesign() {
         </div>
       )}
 
-      {/* Wide Voice Input Bar - minimal transparent theme */}
-      <div className={`group relative w-full max-w-3xl flex items-center gap-3 bg-black/20 backdrop-blur-sm rounded-2xl shadow-xl border px-6 py-3 transition-all duration-300 ${
-        phase === 'listening' ? 'border-blue-500/40 shadow-blue-500/10' :
-        phase === 'designing' ? 'border-amber-500/40 shadow-amber-500/10' :
-        phase === 'speaking' ? 'border-green-500/40 shadow-green-500/10' :
-        phase === 'error' ? 'border-red-500/40 shadow-red-500/10' :
+      {/* Wide Voice Input Bar - darker theme */}
+      <div className={`group relative w-full max-w-3xl flex items-center gap-3 bg-black/50 backdrop-blur-md rounded-2xl shadow-2xl border px-6 py-3 transition-all duration-300 ${
+        phase === 'listening' ? 'border-blue-500/50 shadow-blue-500/20' :
+        phase === 'designing' ? 'border-amber-500/50 shadow-amber-500/20' :
+        phase === 'speaking' ? 'border-green-500/50 shadow-green-500/20' :
+        phase === 'error' ? 'border-red-500/50 shadow-red-500/20' :
         isActive 
-          ? 'border-emerald-500/40 shadow-emerald-500/10' 
-          : 'border-white/10 hover:border-emerald-500/30'
+          ? 'border-emerald-500/50 shadow-emerald-500/20' 
+          : 'border-white/15 hover:border-emerald-500/40'
       }`}>
         {/* Corner brackets on hover or active - subtle */}
         <div className={`absolute top-3 left-3 w-6 h-6 transition-opacity duration-300 ${
