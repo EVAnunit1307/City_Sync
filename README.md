@@ -26,8 +26,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 - **Environmental Reports** - Carbon footprint, noise propagation, habitat, and community impact analysis
 
 ---
- 
-## Getting Started
+
+## Getting Started 
 
 ### Prerequisites
 
