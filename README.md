@@ -21,8 +21,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 - **Infrastructure Index** - Composite scoring across water, sewer, school capacity, and parkland ratio
 - **Financial Projections** - Developer build cost, municipal servicing cost, and development charge recovery estimates
 - **AI Constraint Explanation** - Ask *"Why did congestion spike?"* and get causal analysis
-- **AI Optimization** - Request *"Keep units at 1,000 but reduce congestion"* for density redistribution suggestions 
-- **Randomized Building Generation** - Each placed building gets unique dimensions, orientation, roof style, and facade
+- **AI Optimization** - Request *"Keep units at 1,000 but reduce congestion"* for density redistribution suggestions
+- **Randomized Building Generation** - Each placed building gets unique dimensions, orientation, roof style, and facade 
 - **Environmental Reports** - Carbon footprint, noise propagation, habitat, and community impact analysis
 
 ---
