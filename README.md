@@ -93,8 +93,8 @@ Voice Input --> Web Speech API --> /api/design --> Gemini 2.5 Flash
 ```
 ├── app/                    # Next.js app router
 │   └── api/                # API routes (design, environmental reports, map data)
-├── components/             # React components 
-│   ├── editor/             # Building editor (viewport, controls)
+├── components/             # React components
+│   ├── editor/             # Building editor (viewport, controls) 
 │   └── ThreeMap.tsx        # Main 3D map component
 ├── lib/                    # Core logic
 │   ├── editor/             # Building spec types, geometry builders, randomizer
