@@ -70,8 +70,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 5. Generate environmental impact report
 6. Ask AI for optimization suggestions
 
---- 
-
+---
+ 
 ## Architecture
 
 ```
