@@ -59,8 +59,8 @@ npm run dev
 
 Open [http://localhost:3002](http://localhost:3002) in your browser.
 
---- 
-
+---
+ 
 ## Demo Flow
 
 1. View baseline neighborhood in 3D
