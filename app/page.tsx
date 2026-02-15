@@ -51,13 +51,15 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Demo Content Area - Empty for now */}
-          <div className="tablet-demo-area">
-            <div className="demo-placeholder">
-              <div className="demo-placeholder-icon">🎬</div>
-              <p className="demo-placeholder-text">Demo content coming soon</p>
-              <p className="demo-placeholder-subtext">Interactive visualization will appear here</p>
-            </div>
+          {/* Demo Video */}
+          <div className="tablet-demo-area" style={{ padding: 0, position: 'relative' }}>
+            <iframe
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+              src="https://www.youtube.com/embed/P3chEYABVYA"
+              title="Demo video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
       </ContainerScroll>
