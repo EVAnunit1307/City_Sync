@@ -60,19 +60,12 @@ function ReportTabContent({ sceneRef }: ReportTabContentProps) {
   };
 
   return (
-    <div className="editor-section-animate group relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
-      {/* Corner brackets on hover */}
-      <div className="absolute top-3 left-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="absolute top-0 left-0 w-4 h-0.5 bg-emerald-500" />
-        <div className="absolute top-0 left-0 w-0.5 h-4 bg-emerald-500" />
-      </div>
-      <div className="absolute bottom-3 right-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-emerald-500" />
-        <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-emerald-500" />
-      </div>
-      
-      <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors duration-300">Export &amp; report</h3>
-      <p className="text-xs text-white/60">
+    <div className="editor-section-animate">
+      <h3 className="text-sm font-semibold text-white/90 mb-4 flex items-center gap-2">
+        <div className="w-1 h-4 bg-emerald-500/60 rounded-full"></div>
+        Export & Report
+      </h3>
+      <p className="text-xs text-white/40 mb-4">
         {buildings.length} building{buildings.length !== 1 ? 's' : ''} in scene
       </p>
       <div className="flex flex-wrap gap-2">
@@ -151,17 +144,17 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
 
   return (
     <div className="w-full flex flex-col min-h-0">
-      {/* Main tabs - dark theme */}
-      <div className="shrink-0 mb-4">
-        <div className="flex gap-1 p-1 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+      {/* Main tabs - minimalist */}
+      <div className="shrink-0 mb-6 border-b border-white/5">
+        <div className="flex gap-1">
           {MAIN_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setMainTab(tab.id)}
-              className={`group relative flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-md text-sm font-medium transition-all duration-300 ${
+              className={`group relative flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-medium transition-all duration-200 ${
                 mainTab === tab.id 
-                  ? 'bg-emerald-500/20 text-emerald-400 shadow-lg border border-emerald-500/40' 
-                  : 'text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 border border-transparent'
+                  ? 'text-emerald-400 border-b-2 border-emerald-500' 
+                  : 'text-white/50 hover:text-white/80 border-b-2 border-transparent'
               }`}
             >
               {tab.icon}
@@ -175,19 +168,12 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
       <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1">
           {mainTab === 'build' && (
             <>
-              {/* Direct building list - no accordion */}
-              <div className="editor-section-animate group relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
-                {/* Corner brackets on hover */}
-                <div className="absolute top-3 left-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute top-0 left-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute top-0 left-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                <div className="absolute bottom-3 right-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                
-                <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors duration-300">Buildings</h3>
+              {/* Direct building list - integrated panel section */}
+              <div className="editor-section-animate group relative border-b border-white/5 pb-5 mb-5">
+                <h3 className="text-sm font-semibold text-white/90 mb-4 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-emerald-500/60 rounded-full"></div>
+                  Buildings
+                </h3>
                 <BuildingList
                   batchConfig={batchConfig}
                   setBatchConfig={setBatchConfig}
@@ -196,50 +182,31 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
                 />
               </div>
 
-              {/* Batch/Subdivision options */}
-              <div className="editor-section-animate group relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
-                {/* Corner brackets on hover */}
-                <div className="absolute top-3 left-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute top-0 left-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute top-0 left-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                <div className="absolute bottom-3 right-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                
-                <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors duration-300">Quick Add</h3>
+              {/* Batch/Subdivision options - integrated panel section */}
+              <div className="editor-section-animate group relative border-b border-white/5 pb-5 mb-5">
+                <h3 className="text-sm font-semibold text-white/90 mb-4 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-emerald-500/60 rounded-full"></div>
+                  Quick Add
+                </h3>
                 <SubdivisionPanel />
               </div>
             </>
           )}
 
-<<<<<<< HEAD
           {mainTab === 'impacts' && (
-            <div className="editor-section-animate group relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 space-y-3 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
-              {/* Corner brackets on hover */}
-              <div className="absolute top-3 left-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute top-0 left-0 w-4 h-0.5 bg-emerald-500" />
-                <div className="absolute top-0 left-0 w-0.5 h-4 bg-emerald-500" />
-              </div>
-              <div className="absolute bottom-3 right-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-emerald-500" />
-                <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-emerald-500" />
-              </div>
-              
-              <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors duration-300">Live metrics</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-white/8 transition-all duration-200">
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide">Congestion</p>
-                  <p className="text-sm font-semibold text-white">{congestion}</p>
+            <div className="editor-section-animate space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-4 bg-white/[0.02] border-l-2 border-emerald-500/40 hover:bg-white/[0.04] transition-all duration-200">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wide mb-2">Congestion</p>
+                  <p className="text-2xl font-bold text-white">{congestion}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-white/8 transition-all duration-200">
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide">Transit load</p>
-                  <p className="text-sm font-semibold text-white">{transitLoad}</p>
+                <div className="p-4 bg-white/[0.02] border-l-2 border-blue-500/40 hover:bg-white/[0.04] transition-all duration-200">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wide mb-2">Transit</p>
+                  <p className="text-2xl font-bold text-white">{transitLoad}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/30 hover:bg-white/8 transition-all duration-200">
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide">Units</p>
-                  <p className="text-sm font-semibold text-white">{units}</p>
+                <div className="p-4 bg-white/[0.02] border-l-2 border-purple-500/40 hover:bg-white/[0.04] transition-all duration-200">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wide mb-2">Units</p>
+                  <p className="text-2xl font-bold text-white">{units}</p>
                 </div>
               </div>
             </div>
@@ -249,39 +216,34 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
             <ReportTabContent sceneRef={sceneRef} />
           )}
           {mainTab === 'report' && !sceneRef && (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">Export unavailable</div>
+            <div className="py-8 text-center text-white/40 text-sm">
+              <p>Export unavailable</p>
+            </div>
           )}
 
-          {/* Building settings (when a building is selected) - dark theme */}
+          {/* Building settings (when a building is selected) - integrated panel */}
           {selectedBuilding && mainTab === 'build' && (
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="text-sm font-semibold text-white mb-3">{selectedBuilding.name}</h3>
-              <div className="flex gap-1 p-1 bg-white/5 backdrop-blur-sm rounded-lg mb-3 border border-white/10">
+            <div className="pt-5 mt-5 border-t border-white/5">
+              <h3 className="text-sm font-semibold text-white/90 mb-4 flex items-center gap-2">
+                <div className="w-1 h-4 bg-amber-500/60 rounded-full"></div>
+                {selectedBuilding.name}
+              </h3>
+              <div className="flex gap-1 mb-4">
                 {SETTINGS_TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-all duration-300 ${
+                    className={`flex-1 px-3 py-2 text-xs font-medium transition-all duration-200 ${
                       activeTab === tab.id 
-                        ? 'bg-emerald-500/20 text-emerald-400 shadow-lg border border-emerald-500/40' 
-                        : 'text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 border border-transparent'
+                        ? 'bg-emerald-500/15 text-emerald-400 border-b-2 border-emerald-500' 
+                        : 'text-white/50 hover:text-white/80 border-b-2 border-transparent'
                     }`}
                   >
                     {tab.label}
                   </button>
                 ))}
               </div>
-              <div className="group relative bg-white/5 backdrop-blur-sm p-4 rounded-xl border border-white/10 transition-all duration-300 hover:border-emerald-500/40 hover:bg-white/8 hover:shadow-lg hover:shadow-emerald-500/10">
-                {/* Corner brackets on hover */}
-                <div className="absolute top-3 left-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute top-0 left-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute top-0 left-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                <div className="absolute bottom-3 right-3 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-emerald-500" />
-                  <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-emerald-500" />
-                </div>
-                
+              <div className="bg-white/[0.02] p-4 border-l-2 border-emerald-500/30">
                 {activeTab === 'transform' && (
                   <TransformForm
                     buildingId={selectedBuilding.id}
@@ -297,21 +259,21 @@ export function InputPanel({ sceneRef }: InputPanelProps) {
                 {activeTab === 'textures' && <TextureSelector spec={selectedBuilding.spec} onUpdate={handleUpdate} />}
                 {activeTab === 'windows' && <WindowForm spec={selectedBuilding.spec} onUpdate={handleUpdate} />}
               </div>
-              <div className="mt-2 flex justify-end">
+              <div className="mt-3 flex justify-end">
                 <button
                   onClick={handleReset}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-white/80 hover:bg-white/10 hover:text-emerald-400 border border-white/10 hover:border-emerald-500/40 transition-all duration-200"
+                  className="px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white transition-all duration-200"
                 >
-                  Reset building
+                  Reset building →
                 </button>
               </div>
             </div>
           )}
 
           {!selectedBuilding && mainTab === 'build' && (
-            <div className="py-6 text-center bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 text-white/60 text-sm">
-              <p className="font-medium">No building selected</p>
-              <p className="text-xs text-white/40 mt-1">Add a building or select one in the list</p>
+            <div className="py-12 text-center text-white/30 text-sm">
+              <p className="font-medium text-white/40">No building selected</p>
+              <p className="text-xs mt-1">Add or select a building to configure</p>
             </div>
           )}
       </div>

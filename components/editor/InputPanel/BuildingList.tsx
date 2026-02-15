@@ -226,41 +226,29 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
       )}
 
       {batchPlacementConfig !== null && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg backdrop-blur-sm">
-          <div className="flex items-start gap-2">
-            <svg
-              className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clipRule="evenodd"
-              />
-            </svg>
+        <div className="p-3 bg-emerald-500/5 border-l-2 border-emerald-500 mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm text-emerald-300 font-medium">Batch Placement Mode</p>
-              <p className="text-xs text-emerald-400/80 mt-1">
-                Click anywhere on the grid to place the batch ({batchPlacementConfig.totalBuildings} buildings). One-time placement.
+              <p className="text-sm text-emerald-400 font-medium">Batch Placement Active</p>
+              <p className="text-xs text-white/50 mt-0.5">
+                Click grid to place {batchPlacementConfig.totalBuildings} buildings
               </p>
-              <CurtainButton
-                text="Cancel"
-                onClick={cancelBatchPlacementMode}
-                variant="outline"
-                size="sm"
-                className="mt-2"
-              />
             </div>
+            <CurtainButton
+              text="Cancel"
+              onClick={cancelBatchPlacementMode}
+              variant="outline"
+              size="sm"
+            />
           </div>
         </div>
       )}
 
       {mergeMode && (
-        <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg backdrop-blur-sm">
-          <p className="text-sm text-purple-300 font-medium">Group Mode</p>
-          <p className="text-xs text-purple-400/80 mt-1">
-            Select 2+ buildings to group. They keep individual rotations but share textures/windows.
+        <div className="p-3 bg-purple-500/5 border-l-2 border-purple-500 mb-3">
+          <p className="text-sm text-purple-400 font-medium">Group Mode</p>
+          <p className="text-xs text-white/50 mt-0.5">
+            Select 2+ buildings · Share textures & windows
           </p>
           {selectedBuildingIds.length >= 2 && (
             <CurtainButton
@@ -268,13 +256,13 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
               onClick={handleMerge}
               variant="purple"
               size="default"
-              className="mt-2"
+              className="mt-2 w-full"
             />
           )}
         </div>
       )}
 
-      <div className="space-y-1 max-h-28 overflow-y-auto">
+      <div className="space-y-1 max-h-32 overflow-y-auto">
         {buildings.map((building) => {
           const isSelected = mergeMode
             ? selectedBuildingIds.includes(building.id)
@@ -285,12 +273,12 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
             <div
               key={building.id}
               className={`
-                px-3 py-2 rounded-lg border cursor-pointer transition-all duration-200 ease-out backdrop-blur-sm
+                px-3 py-2.5 cursor-pointer transition-all duration-200 ease-out border-l-2
                 ${isSelected
                   ? mergeMode
-                    ? 'border-purple-400/60 bg-purple-500/20'
-                    : 'border-amber-400/60 bg-amber-500/20 shadow-lg'
-                  : 'border-white/10 bg-white/5 hover:border-amber-400/40 hover:bg-white/10'
+                    ? 'border-purple-500/70 bg-purple-500/10'
+                    : 'border-emerald-500/70 bg-emerald-500/10'
+                  : 'border-white/5 bg-white/[0.02] hover:border-emerald-500/30 hover:bg-white/[0.04]'
                 }
               `}
               onClick={() => handleBuildingClick(building.id)}
@@ -305,37 +293,37 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
                     )}
                     <span className="font-medium text-white text-sm">{building.name}</span>
                     {mergeMode && selectionIndex === 0 && (
-                      <span className="text-xs bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full border border-purple-400/30">Primary</span>
+                      <span className="text-[10px] text-purple-400 px-1.5 py-0.5 uppercase tracking-wide">Primary</span>
                     )}
                     {!mergeMode && building.groupId && (
-                      <span className="text-xs bg-green-500/30 text-green-300 px-1.5 py-0.5 rounded-full border border-green-400/30">Grouped</span>
+                      <span className="text-[10px] text-green-400 px-1.5 py-0.5 uppercase tracking-wide">Grouped</span>
                     )}
-                    <span className="text-xs text-white/50">
-                      {building.spec.width}×{building.spec.depth}m, {building.spec.numberOfFloors}F
+                    <span className="text-xs text-white/40">
+                      {building.spec.width}×{building.spec.depth}m · {building.spec.numberOfFloors}F
                     </span>
                   </div>
                 </div>
                 {!mergeMode && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     {building.groupId && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           ungroupBuilding(building.id);
                         }}
-                        className="p-1.5 rounded-full border border-green-400/40 text-green-400 hover:bg-green-500/80 hover:text-white transition-all duration-200 ease-out"
-                        title="Ungroup building"
+                        className="p-1 text-green-400/60 hover:text-green-400 transition-colors"
+                        title="Ungroup"
                       >
                         <svg
                           className="w-4 h-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
+                          strokeWidth={2}
                         >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2}
                             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                           />
                         </svg>
@@ -346,19 +334,19 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
                         e.stopPropagation();
                         removeBuilding(building.id);
                       }}
-                      className="p-1.5 rounded-full border border-red-400/40 text-red-400 hover:bg-red-500/80 hover:text-white transition-all duration-200 ease-out"
-                      title="Delete building"
+                      className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                      title="Delete"
                     >
                       <svg
                         className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        strokeWidth={2}
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         />
                       </svg>
@@ -372,32 +360,20 @@ export function BuildingList({ batchConfig: batchConfigProp, setBatchConfig: set
       </div>
 
       {placementMode && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg backdrop-blur-sm">
-          <div className="flex items-start gap-2">
-            <svg
-              className="w-5 h-5 text-amber-400 mt-0.5 shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clipRule="evenodd"
-              />
-            </svg>
+        <div className="p-3 bg-amber-500/5 border-l-2 border-amber-500 mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm text-amber-300 font-medium">Placement Mode Active</p>
-              <p className="text-xs text-amber-400/80 mt-1">
-                Click anywhere on the grid to place the new building
+              <p className="text-sm text-amber-400 font-medium">Placement Active</p>
+              <p className="text-xs text-white/50 mt-0.5">
+                Click grid to place new building
               </p>
-              <CurtainButton
-                text="Cancel"
-                onClick={() => setPlacementMode(false)}
-                variant="outline"
-                size="sm"
-                className="mt-2"
-              />
             </div>
+            <CurtainButton
+              text="Cancel"
+              onClick={() => setPlacementMode(false)}
+              variant="outline"
+              size="sm"
+            />
           </div>
         </div>
       )}

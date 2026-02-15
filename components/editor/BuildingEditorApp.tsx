@@ -94,13 +94,13 @@ function EditorLayout() {
           </div>
         </div>
 
-        {/* Right sidebar panel */}
-        <div className="w-96 shrink-0 border-l border-white/10 bg-black/30 backdrop-blur-md overflow-y-auto shadow-2xl editor-sidebar-scroll">
-          <div className="sticky top-0 z-10 px-6 py-5 bg-black/60 backdrop-blur-xl border-b border-white/10 shadow-lg">
-            <h2 className="text-xl font-bold text-white tracking-tight">Editor Panel</h2>
-            <p className="text-xs text-white/60 mt-1">Configure your buildings and view impacts</p>
+        {/* Right sidebar panel - integrated dark panel */}
+        <div className="w-96 shrink-0 bg-[#0a0a0a] overflow-y-auto shadow-[inset_1px_0_0_rgba(255,255,255,0.05)] editor-sidebar-scroll">
+          <div className="sticky top-0 z-10 px-6 py-5 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5">
+            <h2 className="text-xl font-bold text-white tracking-tight">Editor</h2>
+            <p className="text-xs text-white/50 mt-1">Configure buildings & analyze impact</p>
           </div>
-          <div className="p-6 pb-32 animate-in fade-in duration-300">
+          <div className="p-6 pb-32">
             <InputPanel sceneRef={sceneRef} />
           </div>
         </div>
