@@ -67,8 +67,8 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 2. Add 1,200 detached homes — watch congestion spike, transit underused
 3. Switch to transit-oriented mixed density
 4. Congestion drops, transit usage increases, infrastructure index stabilizes
-5. Generate environmental impact report 
-6. Ask AI for optimization suggestions
+5. Generate environmental impact report
+6. Ask AI for optimization suggestions 
 
 ---
 
