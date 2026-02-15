@@ -31,8 +31,8 @@ Place a proposed subdivision into the 3D environment, define unit count and hous
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or pnpm
+- Node.js 18+
+- npm or pnpm 
 
 ### Installation
 
