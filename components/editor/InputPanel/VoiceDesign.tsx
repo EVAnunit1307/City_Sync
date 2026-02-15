@@ -201,7 +201,7 @@ export function VoiceDesign() {
   })();
 
   return (
-    <div className="voice-bar-animate fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center px-8 pb-8">
+    <div className="voice-bar-animate fixed bottom-0 left-0 right-96 z-50 flex flex-col items-center px-8 pb-6">
       {/* Popover: Last Voice Command details - minimal transparent theme */}
       {lastResult && showDetails && (
         <div className="mb-3 w-full max-w-2xl bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/10 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">

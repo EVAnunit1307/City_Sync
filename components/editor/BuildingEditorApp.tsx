@@ -73,9 +73,9 @@ function EditorLayout() {
       </header>
 
       {/* Main content area with viewport and right sidebar */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* 3D viewport */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           <Scene sceneRef={sceneRef} />
 
           {/* Placement legend (top-left) - dark theme */}
@@ -95,7 +95,7 @@ function EditorLayout() {
         </div>
 
         {/* Right sidebar panel */}
-        <div className="w-full md:w-96 shrink-0 border-l border-white/10 bg-black/30 backdrop-blur-md overflow-y-auto shadow-2xl editor-sidebar-scroll">
+        <div className="w-96 shrink-0 border-l border-white/10 bg-black/30 backdrop-blur-md overflow-y-auto shadow-2xl editor-sidebar-scroll">
           <div className="sticky top-0 z-10 px-6 py-5 bg-black/60 backdrop-blur-xl border-b border-white/10 shadow-lg">
             <h2 className="text-xl font-bold text-white tracking-tight">Editor Panel</h2>
             <p className="text-xs text-white/60 mt-1">Configure your buildings and view impacts</p>
