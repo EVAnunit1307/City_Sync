@@ -11,8 +11,8 @@ GrowthSync re-engineers traditional planning review by transforming static devel
 Place a proposed subdivision into the 3D environment, define unit count and housing mix, and watch real-time projections update across transportation, transit, infrastructure, and cost metrics.
 
 ---
- 
-## Features
+
+## Features 
 
 - **3D Digital Twin** - Real-time rendering of 4,600+ buildings, roads, and transit infrastructure in the Toronto area
 - **Voice-Driven Planning** - Describe developments naturally: *"Add 800 mixed units near transit with 20% townhouses"*
